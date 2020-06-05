@@ -1,13 +1,13 @@
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##    Lambda calculation, Bootstrap
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 rm(list = ls())
 gc()
 options(stringsAsFactors = F)
 
 require(dplyr)
 require(ggplot2)
+require(readr)
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###         Load functions
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -269,9 +269,8 @@ boot_lam <- function(ii)
 ####~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ####           Read data
 ####~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-setwd("C://Users/ma22buky/Documents/Julia_Paper/Done/")
-dat_d <- read.csv("Bro_Demography.csv")
-dat_s <- read.csv("Bro_Seed_data.csv")
+dat_d <- read.csv("https://raw.githubusercontent.com/Martin19910130/Bromus_IPM_publication/master/Bro_Demography.csv")
+dat_s <- read.csv("https://raw.githubusercontent.com/Martin19910130/Bromus_IPM_publication/master/Bro_Seed_data.csv")
 
 ## Delete the new plants which grow bigger then 30
 dat_d <- dat_d[-(which(dat_d$sizet1 >= 30 & dat_d$new_plant == 1)),]
