@@ -200,12 +200,12 @@ boot_lam <- function(ii)
   data3 <- subset(demo_dat, subplot <= 3)
   
   # get the seedling count per subplot
-  Sl_per_subplot_apr18 <- unique(data3[, c("plot", "subplot", "apr2018SL")])
+  Sl_per_subplot_apr18 <- unique(data3[, c("plot", "subplot", "apr18SL")])
   Sl_per_subplot_nov18 <- unique(data3[, c("plot", "subplot", "nov18SL")])
   Sl_per_subplot_apr19 <- unique(data3[, c("plot", "subplot", "apr19SL")])
   
   # calculate the sum of seedling per plot
-  Sl_per_plot_apr18 <- aggregate(Sl_per_subplot_apr18$apr2018SL, 
+  Sl_per_plot_apr18 <- aggregate(Sl_per_subplot_apr18$apr18SL, 
                                  by = list(Sl_per_subplot_apr18$plot), FUN = sum, na.rm = T)
   Sl_per_plot_nov18 <- aggregate(Sl_per_subplot_nov18$nov18SL, 
                                  by = list(Sl_per_subplot_nov18$plot), FUN = sum, na.rm = T)
