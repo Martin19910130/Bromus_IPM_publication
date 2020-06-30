@@ -67,12 +67,12 @@ fx1<-function(x,pars){
 }
 
 fx2<-function(x,pars){
-  #number of flowers per flowering plant based on size class
+  #number of seeds per flowering plant based on size class
   return( exp( pars$seednum_b0 + 
                  pars$seednum_b1 * x) )
 }
 
-#put them together- probability of flowering * flowers per flowering plant
+#put them together- probability of flowering * seeds per flowering plant
 fx3<-function(x,pars){
   xb <- x_range(x, pars)
   return( fx1(xb,pars) * fx2(xb,pars) )
@@ -106,7 +106,7 @@ ker_mee <- function(pars){
   Fmat[1,2:(n+1)] <- fx3(y,pars) * pars$aprilSL_per_fl
   
   
-  # November seedlings go into 50 by 50 plant matrix
+  # November seedlings go into 200 by 200 plant matrix
   Fmat[2:(n+1),2:(n+1)] <- fx3(y,pars) * pars$novSL_per_fl * pars$SL_surv * newpl(y,pars) * h 
   
   # Growth/survival transition matrix
@@ -164,18 +164,12 @@ boot_lam <- function(ii)
   data_s <- sample_n(seed_dat, nrow(seed_dat), replace = T)
 
   # calculate the mean seeds 
-  mean_seed <- aggregate(data_s$number_of_seeds, by = list(data_s$treatment), FUN = mean, na.rm = T)
+  mean_seed <- mean(data_s$number_of_seeds, na.rm = T)
   
   # add the mean seeds to the demography data
-  data$mean_seed <- ifelse(data$sample_year == 2018 & data$treatment == "ambient_mowing", mean_seed$x, NA)
-  data$mean_seed <- ifelse(data$sample_year == 2018 & data$treatment == "ambient_grazing", 
-                           mean_seed$x, data$mean_seed)
-  data$mean_seed <- ifelse(data$sample_year == 2018 & data$treatment == "future_mowing", 
-                           mean_seed$x, data$mean_seed)
-  data$mean_seed <- ifelse(data$sample_year == 2018 & data$treatment == "future_grazing", 
-                           mean_seed$x, data$mean_seed)
-  data$seed_per_ind <- round(data$mean_seed) * data$number_of_flowers
-  
+  data$mean_seed <- ifelse(data$sample_year == 2018, mean_seed, NA)
+  data$seed_per_ind <- data$mean_seed * data$number_of_flowers
+
   #--------------------------------------
   # survival
   #--------------------------------------
@@ -195,7 +189,7 @@ boot_lam <- function(ii)
   # number of seeds per flowering plant
   #--------------------------------------
   data2 <- subset(data, flower == "1")
-  sefl_mod <- glm(round(seed_per_ind) ~ logsizet0, data = data2, family='poisson')
+  sefl_mod <- glm(round(seed_per_ind) ~ logsizet0, data = data2, family = 'poisson')
   
   #--------------------------------------
   # seedling per seed
@@ -214,12 +208,12 @@ boot_lam <- function(ii)
   Sl_per_subplot_apr19$apr19SL[is.na(Sl_per_subplot_apr19$apr19SL)] <- 0
   
   # calculate the sum of seedling per plot, should be the same as unique zeug
- # Sl_per_plot_apr18 <- aggregate(Sl_per_subplot_apr18$apr18SL, 
+  # Sl_per_plot_apr18 <- aggregate(Sl_per_subplot_apr18$apr18SL, 
   #                               by = list(Sl_per_subplot_apr18$plot), FUN = sum, na.rm = T)
   #Sl_per_plot_nov18 <- aggregate(Sl_per_subplot_nov18$nov18SL, 
-   #                              by = list(Sl_per_subplot_nov18$plot), FUN = sum, na.rm = T)
+  #                              by = list(Sl_per_subplot_nov18$plot), FUN = sum, na.rm = T)
   #Sl_per_plot_apr19 <- aggregate(Sl_per_subplot_apr19$apr19SL, 
-   #                              by = list(Sl_per_plot_apr19$plot), FUN = sum, na.rm = T)
+  #                              by = list(Sl_per_plot_apr19$plot), FUN = sum, na.rm = T)
   
   # calculate the sum of seeds per plot
   seedling_per_seed <- aggregate(data3$seed_per_ind, by = list(data3$plot,
@@ -231,21 +225,21 @@ boot_lam <- function(ii)
   seedling_per_seed <- seedling_per_seed[order(seedling_per_seed$Group.1, seedling_per_seed$Group.2),]
   
   Sl_per_subplot_nov18$seeds <- ifelse(Sl_per_subplot_nov18$plot == seedling_per_seed$Group.1 & 
-                                       Sl_per_subplot_nov18$subplot == seedling_per_seed$Group.2, 
+                                         Sl_per_subplot_nov18$subplot == seedling_per_seed$Group.2, 
                                        seedling_per_seed$x, NA)
   Sl_per_subplot_nov18 <- subset(Sl_per_subplot_nov18, seeds > 0)
   
   Sl_per_subplot_apr19$seeds <- ifelse(Sl_per_subplot_apr19$plot == seedling_per_seed$Group.1 & 
-                                       Sl_per_subplot_apr19$subplot == seedling_per_seed$Group.2, 
+                                         Sl_per_subplot_apr19$subplot == seedling_per_seed$Group.2, 
                                        seedling_per_seed$x, NA)
   Sl_per_subplot_apr19 <- subset(Sl_per_subplot_apr19, seeds > 0)
   
   # calculate the turnover of seeds to seedlings
   Sl_per_subplot_nov18$seed_SL_nov18 <- Sl_per_subplot_nov18$nov18SL / Sl_per_subplot_nov18$seeds
   Sl_per_subplot_apr19$seed_SL_apr19 <- Sl_per_subplot_apr19$apr19SL / Sl_per_subplot_apr19$seeds
-  #seedling_per_seed[seedling_per_seed == Inf] <- NA
-  #seedling_per_seed[is.na(seedling_per_seed)] <- NA
-   
+  seedling_per_seed[seedling_per_seed == Inf] <- NA
+  seedling_per_seed[is.na(seedling_per_seed)] <- NA
+  
   #--------------------------------
   # Seedling survival
   #--------------------------------
@@ -307,7 +301,7 @@ dat_d <- dat_d[-(which(dat_d$sizet1 >= 30 & dat_d$new_plant == 1)),]
 demo_dat <- subset(dat_d, treatment == "ambient_mowing")
 seed_dat <- subset(dat_s, treatment == "ambient_mowing")
 
-lamb_amb_mow <- sapply(1:5000, FUN = boot_lam)
+lamb_amb_mow <- sapply(1:100, FUN = boot_lam)
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##            Ambient grazing
@@ -315,7 +309,7 @@ lamb_amb_mow <- sapply(1:5000, FUN = boot_lam)
 demo_dat <- subset(dat_d, treatment == "ambient_grazing")
 seed_dat <- subset(dat_s, treatment == "ambient_grazing")
 
-lamb_amb_gra <- sapply(1:5000, FUN = boot_lam)
+lamb_amb_gra <- sapply(1:1000, FUN = boot_lam)
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##          Future mowing
@@ -323,7 +317,7 @@ lamb_amb_gra <- sapply(1:5000, FUN = boot_lam)
 demo_dat <- subset(dat_d, treatment == "future_mowing")
 seed_dat <- subset(dat_s, treatment == "future_mowing")
 
-lamb_fut_mow <- sapply(1:5000, FUN = boot_lam)
+lamb_fut_mow <- sapply(1:1000, FUN = boot_lam)
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##          Future grazing
@@ -331,7 +325,7 @@ lamb_fut_mow <- sapply(1:5000, FUN = boot_lam)
 demo_dat <- subset(dat_d, treatment == "future_grazing")
 seed_dat <- subset(dat_s, treatment == "future_grazing")
 
-lamb_fut_gra <- sapply(1:5000, FUN = boot_lam)
+lamb_fut_gra <- sapply(1:1000, FUN = boot_lam)
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##          Plot mean Lambdas
@@ -363,5 +357,12 @@ ggplot(Results, aes(x = climate, y = lambda_mean, color = climate, shape = landu
         legend.position = c(0.87, 0.89), 
         legend.background = element_rect(fill="transparent"),
         legend.title = element_blank())  +
-  ylab("Asymptotic population growth rate (λ)") + xlab("Climate treatment") + ggtitle("Population growth rates") #+ 
-  #theme(legend.position = "none")
+  ylab("Asymptotic population growth rate (λ)") + xlab("Climate treatment") + guides(color = F)
+  
+ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/lambda.pdf", 
+             plot = last_plot(), 
+             device = cairo_pdf, 
+              dpi = 1200, 
+              width = 18,
+             height = 14, 
+             units = "cm")
