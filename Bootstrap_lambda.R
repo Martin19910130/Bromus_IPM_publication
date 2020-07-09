@@ -207,15 +207,7 @@ boot_lam <- function(ii)
   Sl_per_subplot_nov18$nov18SL[is.na(Sl_per_subplot_nov18$nov18SL)] <- 0 
   Sl_per_subplot_apr19$apr19SL[is.na(Sl_per_subplot_apr19$apr19SL)] <- 0
   
-  # calculate the sum of seedling per plot, should be the same as unique zeug
-  # Sl_per_plot_apr18 <- aggregate(Sl_per_subplot_apr18$apr18SL, 
-  #                               by = list(Sl_per_subplot_apr18$plot), FUN = sum, na.rm = T)
-  #Sl_per_plot_nov18 <- aggregate(Sl_per_subplot_nov18$nov18SL, 
-  #                              by = list(Sl_per_subplot_nov18$plot), FUN = sum, na.rm = T)
-  #Sl_per_plot_apr19 <- aggregate(Sl_per_subplot_apr19$apr19SL, 
-  #                              by = list(Sl_per_plot_apr19$plot), FUN = sum, na.rm = T)
-  
-  # calculate the sum of seeds per plot
+  # calculate the sum of seeds per subplot
   seedling_per_seed <- aggregate(data3$seed_per_ind, by = list(data3$plot,
                                                                data3$subplot), FUN = sum, na.rm = T)
   
@@ -301,7 +293,7 @@ dat_d <- dat_d[-(which(dat_d$sizet1 >= 30 & dat_d$new_plant == 1)),]
 demo_dat <- subset(dat_d, treatment == "ambient_mowing")
 seed_dat <- subset(dat_s, treatment == "ambient_mowing")
 
-lamb_amb_mow <- sapply(1:100, FUN = boot_lam)
+lamb_amb_mow <- sapply(1:1000, FUN = boot_lam)
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##            Ambient grazing
@@ -366,3 +358,18 @@ ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/lambda.pdf",
               width = 18,
              height = 14, 
              units = "cm")
+
+## signifi
+savers=matrix(0, 1000, 1)
+
+for (i in 1:1000) 
+  {
+  
+  savers[i]=lamb_amb_mow[sample(1:1000, 1)]-lamb_amb_gra[sample(1:1000, 1)]
+  
+}
+
+sortedsaved=sort(savers)
+smaller_zero <- length(which(savers < 0))
+
+smaller_zero/1000

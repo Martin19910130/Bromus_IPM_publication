@@ -416,6 +416,10 @@ for(i in 1:length(dep))
   names(mod_compare)[i] <- paste(dep[i], "model", sep = "_")
 }
 
+mod_compare$survival_model
+mod_compare$logsizet1_model
+mod_compare$flower_model
+mod_compare$number_of_seeds_model
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##          LTRE, sensitivty, models
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
