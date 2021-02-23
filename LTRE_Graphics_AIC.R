@@ -12,7 +12,7 @@ library(gridExtra)
 library(grid)
 
 df_binned_prop <- function(df, n_bins, siz_var, rsp_var)
-  {
+{
   
   size_var <- deparse( substitute(siz_var) )
   resp_var <- deparse( substitute(rsp_var) )
@@ -117,64 +117,131 @@ df_bins_flow <- do.call(rbind.data.frame, df_bins_flow)
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###                 Graphics
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-## color platte
+## color palette is outdated as we define the colors in the ggplot by hand now
 rbPalette <- c("#0072B2", "#D55E00")
+
+## create a treatment column
+df_bins_surv$treatment <- paste(df_bins_surv$climate, df_bins_surv$management)
+df_bins_flow$treatment <- paste(df_bins_flow$climate, df_bins_flow$management)
+demo_data$treatment <- paste(demo_data$climate, demo_data$management)
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##        Survival plot
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-surv_pl <- ggplot(df_bins_surv, aes(x = x, y = y, shape = management, color = climate)) + 
+surv_pl <- ggplot(df_bins_surv, aes(x = x, y = y, shape = treatment, color = treatment, 
+                                    linetype = treatment)) + 
   geom_point(size = 1.7) + 
   geom_smooth(method = "glm", method.args = list(family = "binomial"),
-              mapping = aes(x = logsizet0, y = survival, color = climate, 
-                            linetype = management), se = F, data = demo_data, size = 0.5) +
-  scale_linetype_manual(values = c("dashed", "solid")) + 
-  scale_color_manual(values = rbPalette) + ylab("Plant survival") + xlab("") + theme_classic() +
+              mapping = aes(x = logsizet0, y = survival), se = F, data = demo_data, size = 0.5) +
+  scale_linetype_manual(values = c("ambient grazing" = "dashed", 
+                                   "future grazing" = "dashed",
+                                   "ambient mowing" = "solid", 
+                                   "future mowing" = "solid")) + 
+  scale_color_manual(values = c("ambient grazing" = "#0072B2", 
+                                "ambient mowing" = "#0072B2",
+                                "future grazing" = "#D55E00",
+                                "future mowing" = "#D55E00")) + 
+  scale_shape_manual(values = c("ambient grazing" = 1,
+                                "future grazing" = 1, 
+                                "ambient mowing" = 17,
+                                "future mowing" = 17)) + 
+  ylab("Plant survival") + xlab("") + theme_classic() +
   scale_y_continuous(breaks = c(0,1), limits = c(0,1)) + 
   scale_x_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
                      labels = c(0.25, 1, 5, 15, 50, 150)) +  
-  ggtitle("a) Plant survival") + theme(legend.position = "none")
+  ggtitle("a) Plant survival") + 
+  theme(legend.position = "", plot.title = element_text(size = 10)) + 
+  guides(color = guide_legend(""), linetype = guide_legend(""), shape = guide_legend(""))
+
+surv_pl
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##          Growth plot
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-grow_pl <- ggplot(demo_data, aes(x = logsizet0, y = logsizet1, shape = management, color = climate)) +
-  geom_point(size = 1.7) + scale_color_manual(values = rbPalette) + theme_classic() + 
-  geom_smooth(method = "lm", se = F, mapping = aes(linetype = management), size = 0.5) + 
+grow_pl <- ggplot(demo_data, aes(x = logsizet0, y = logsizet1, shape = treatment, color = treatment, 
+                                 linetype = treatment)) + geom_point(size = 1.7) +   
+  scale_linetype_manual(values = c("ambient grazing" = "dashed", 
+                                   "future grazing" = "dashed",
+                                   "ambient mowing" = "solid", 
+                                   "future mowing" = "solid")) + 
+  scale_color_manual(values = c("ambient grazing" = "#0072B2", 
+                                "ambient mowing" = "#0072B2",
+                                "future grazing" = "#D55E00",
+                                "future mowing" = "#D55E00")) + 
+  scale_shape_manual(values = c("ambient grazing" = 1,
+                                "future grazing" = 1, 
+                                "ambient mowing" = 17,
+                                "future mowing" = 17)) + theme_classic() + 
+  geom_smooth(method = "lm", se = F, size = 0.5) + 
   ylab(expression(paste("log (size ", italic("t"), " + 1)"))) + xlab("") +
-  theme(legend.position = "none") + ggtitle("b) Plant growth") + 
-  scale_linetype_manual(values = c("dashed", "solid")) + 
+  theme(legend.position = "none", plot.title = element_text(size = 10)) + ggtitle("b) Plant growth") +
   scale_x_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
                      labels = c(0.25, 1, 5, 15, 50, 150)) +
   scale_y_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
-                     labels = c(0.25, 1, 5, 15, 50, 150))
+                     labels = c(0.25, 1, 5, 15, 50, 150)) + 
+  guides(color = guide_legend(""), linetype = guide_legend(""), shape = guide_legend(""))
+
+grow_pl
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##      Flower probability plot
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-flpr_pl <- ggplot(df_bins_flow, aes(x = x, y = y, color = climate, shape = management)) +
-  geom_point(size = 1.7) +  scale_color_manual(values = rbPalette) + theme_classic() + 
-  geom_smooth(data = demo_data, mapping = aes(x = logsizet0, y = flower, color = climate, linetype = management),
+flpr_pl <- ggplot(df_bins_flow, aes(x = x, y = y, shape = treatment, color = treatment, 
+                                    linetype = treatment)) +
+  geom_point(size = 1.7) +  
+  scale_linetype_manual(values = c("ambient grazing" = "dashed", 
+                                   "future grazing" = "dashed",
+                                   "ambient mowing" = "solid", 
+                                   "future mowing" = "solid")) + 
+  scale_color_manual(values = c("ambient grazing" = "#0072B2", 
+                                "ambient mowing" = "#0072B2",
+                                "future grazing" = "#D55E00",
+                                "future mowing" = "#D55E00")) + 
+  scale_shape_manual(values = c("ambient grazing" = 1,
+                                "future grazing" = 1, 
+                                "ambient mowing" = 17,
+                                "future mowing" = 17)) + theme_classic() + 
+  geom_smooth(data = demo_data, mapping = aes(x = logsizet0, y = flower),
               method = "glm" , method.args = list(family = "binomial"), se = F, size = .5) +
-  scale_y_continuous(breaks = c(0, 1), limits = c(0, 1)) +
-  scale_linetype_manual(values = c("dashed", "solid")) + 
-  ylab("Flower probability") + xlab(expression(paste("log (size ", italic("t"), ")"))) + theme(legend.position = "none") +
+  scale_y_continuous(breaks = c(0, 1), limits = c(0, 1)) + 
+  ylab("Flower probability") + xlab(expression(paste("log (size ", italic("t"), ")"))) +
+  theme(legend.position = "none", plot.title = element_text(size = 10)) +
   labs(color = "Treatment") + ggtitle("c) Reproduction probability") + 
   scale_x_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
-                     labels = c(0.25, 1, 5, 15, 50, 150))
+                     labels = c(0.25, 1, 5, 15, 50, 150)) + 
+  guides(color = guide_legend(""), linetype = guide_legend(""), shape = guide_legend(""))
 
-## number of seeds per flower plot
+flpr_pl
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##      number of seeds per flower plot
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 demo_data2 <- subset(demo_data, flower == 1)
-nrse_pl <- ggplot(demo_data2, aes(x = logsizet0, y = number_of_seeds, color = climate, shape = management)) + 
+
+nrse_pl <- ggplot(demo_data2, aes(x = logsizet0, y = number_of_seeds, color = treatment, 
+                                  shape = treatment, linetype = treatment)) + 
   geom_point() + theme_classic() + 
-  geom_smooth(method = "glm", method.args = list(family = "poisson"), 
-              mapping = aes(linetype = management), se = F, size = .5) +
-  scale_color_manual(values = rbPalette) + ylab("Seeds per plant")  + 
-  scale_linetype_manual(values = c("dashed", "solid")) +
-  xlab(expression(paste("log (size ", italic("t"), ")"))) + theme(legend.position = "none")+ 
+  geom_smooth(method = "glm", method.args = list(family = "poisson"), se = F, size = .5) + 
+  ylab("Seeds per plant")  + 
+  scale_linetype_manual(values = c("ambient grazing" = "dashed", 
+                                   "future grazing" = "dashed",
+                                   "ambient mowing" = "solid", 
+                                   "future mowing" = "solid")) + 
+  scale_color_manual(values = c("ambient grazing" = "#0072B2", 
+                                "ambient mowing" = "#0072B2",
+                                "future grazing" = "#D55E00",
+                                "future mowing" = "#D55E00")) + 
+  scale_shape_manual(values = c("ambient grazing" = 1,
+                                "future grazing" = 1, 
+                                "ambient mowing" = 17,
+                                "future mowing" = 17)) +
+  xlab(expression(paste("log (size ", italic("t"), ")"))) + 
+  theme(legend.position = "none", plot.title = element_text(size = 10))+ 
   ggtitle("d) Seeds per reproductive plant") + labs(color = "Treatment") + 
   scale_y_continuous(breaks=c(0, 1000, 2000)) +
   scale_x_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
-                     labels = c(0.25, 1, 5, 15, 50, 150))
+                     labels = c(0.25, 1, 5, 15, 50, 150)) + 
+  guides(color = guide_legend(""), linetype = guide_legend(""), shape = guide_legend(""))
+
+nrse_pl
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##      Seedling per seed plot (only on first 3 subplots)
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -245,7 +312,7 @@ sl_seed_nov18 <- ggplot(mean_sl_seed, aes(x = management, y = mean_sl, fill = cl
              position = position_dodge(0.94)) + 
   scale_fill_manual(values = rbPalette) +
   theme_classic() + ggtitle("e) Fall recruitment") +
-  theme(legend.position = "none", axis.title.x=element_blank()) +
+  theme(legend.position = "none", axis.title.x=element_blank(), plot.title = element_text(size = 10)) +
   ylab("Seedlings / Subplot") + xlab("Treatment combination") +
   scale_y_continuous(breaks = seq(0, 0.3, 0.05), limits = c(-0.01, 0.25))
 
@@ -253,10 +320,10 @@ sl_seed_nov18 <- ggplot(mean_sl_seed, aes(x = management, y = mean_sl, fill = cl
 mean_sl_seed_apr19 <- aggregate(apr_19$sl_per_seed, by = list(apr_19$climate, apr_19$management),
                                 FUN = mean, na.rm = T)
 mean_sl_seed_apr19$sd <- aggregate(apr_19$sl_per_seed, by = list(apr_19$climate, nov_18$management),
-                                FUN = sd, na.rm = T)[, "x"]
+                                   FUN = sd, na.rm = T)[, "x"]
 colnames(mean_sl_seed_apr19) <- c("climate", "management", "mean_sl", "sd")
 mean_sl_seed_apr19$se <- mean_sl_seed_apr19$sd / sqrt(15)
- 
+
 ## Plot seeds to seedling apr 19 
 sl_seed_apr19 <- ggplot(mean_sl_seed_apr19, aes(x = management, y = mean_sl, fill = climate)) + 
   geom_bar(stat = "identity", position = position_dodge(width = 0.94)) + 
@@ -268,7 +335,7 @@ sl_seed_apr19 <- ggplot(mean_sl_seed_apr19, aes(x = management, y = mean_sl, fil
              position = position_dodge(0.94)) + 
   scale_fill_manual(values = rbPalette) +
   theme_classic() + ggtitle("f) Spring recruitment") +
-  theme(legend.position = "none", axis.title.x=element_blank()) +
+  theme(legend.position = "none", axis.title.x=element_blank(), plot.title = element_text(size = 10)) +
   ylab("Seedlings / Subplot") + xlab("Treatment combination") +
   scale_y_continuous(breaks = seq(0, 0.3, 0.05), limits = c(-0.01, 0.25))
 
@@ -313,7 +380,7 @@ sl_surv_pl <- ggplot(mean_sl_surv, aes(x = management, y = mean, fill = climate)
   geom_point(sl_surv, mapping = aes(y = sl_surv, x = management, shape = management), 
              position = position_dodge(0.94)) +  theme_classic() + 
   scale_fill_manual(values = rbPalette) + scale_y_continuous(breaks=c(0, 0.5, 1), limits = c(0, 1)) +
-  theme(legend.position = "none", axis.title.x=element_blank()) +
+  theme(legend.position = "none", axis.title.x=element_blank(), plot.title = element_text(size = 10)) +
   ylab("Survival rate") + xlab("Treatment combination") +
   ggtitle("g) Establishment")
 
@@ -326,35 +393,14 @@ new_size_pl <- ggplot(demo_dat_new, aes(x = management, y = logsizet1, fill = cl
   geom_point(demo_dat_new, mapping = aes(x = management, y = logsizet1, shape = management),
              position = position_dodge(0.75)) + ggtitle("h) Size distribution of new plants") +  
   scale_fill_manual(values = rbPalette) + theme_classic() +  
-  theme(legend.position = "none", axis.title.x=element_blank()) + 
+  theme(legend.position = "none", axis.title.x=element_blank(), plot.title = element_text(size = 10)) + 
   scale_y_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
                      labels = c(0.25, 1, 5, 15, 50, 150)) + 
   ylab(expression(paste("log (size ", italic("t"), " + 1)"))) 
 
-legend_pl <- ggplot(df_bins_surv, aes(x = x, y = y, shape = management, color = climate)) + 
-  geom_point(size = 1.7) + theme_classic() + 
-  geom_smooth(method = "glm", method.args = list(family = "binomial"),
-              mapping = aes(x = logsizet0, y = survival, color = climate, 
-                            linetype = management), se = F, data = demo_data, size =0.5) +
-  scale_linetype_manual(values = c("dashed", "solid")) + 
-  scale_color_manual(values = rbPalette) +
-  scale_shape_manual(values = c(16,17)) + 
-  ylab("Plant survival") + xlab("") + theme_classic() +
-  scale_y_continuous(breaks = c(0,1), limits = c(0,1)) + 
-  scale_x_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
-                     labels = c(0.25, 1, 5, 15, 50, 150)) +  
-  ggtitle("a.) Plant survival") + theme(legend.position = "bottom") +
-  labs(color = "Climate", shape = "Management", linetype = "Management") + 
-  theme(legend.title = element_text(face = "bold")) + 
-  guides(lty = guide_legend(override.aes = list(col = 'black', lty = c("solid", "dashed")))) 
-  
-
-mylegend<-g_legend(legend_pl)
-
-Fig_2 <- grid.arrange(surv_pl, grow_pl, flpr_pl, nrse_pl, sl_seed_nov18,
-                      sl_seed_apr19 , sl_surv_pl, new_size_pl, mylegend,
-                      layout_matrix = rbind(c(1,2), c(3,4), c(5,6), c(7,8), c(9,9)), 
-                      widths = c(2.7, 2.7), heights = c(2.6, 2.6, 2.6, 2.6, 0.4))
+Fig_2 <- ggpubr::ggarrange(surv_pl, grow_pl, flpr_pl, nrse_pl, sl_seed_nov18,
+                           sl_seed_apr19 , sl_surv_pl, new_size_pl, ncol = 2, nrow = 4, common.legend = T,
+                           legend = "bottom")
 
 #save the figure as pdf
 ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/FigVR_binned.pdf", 
@@ -370,7 +416,7 @@ ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/FigVR_binned.pdf",
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 AIC_pub <- function(df, dep)
 {
-
+  
   if(dep == "logsizet1")
   {
     z1 <- lm(df[, dep] ~ df[, "logsizet0"]) 
@@ -511,7 +557,7 @@ LTRE_fun <- function(demo_data)
                        aprilSL_per_fl = mean(seedling_per_seed$seed_SL_apr19, na.rm = T),
                        SL_surv        = sl_surv,
                        L = min(c(data$logsizet0,
-                                  data$logsizet1),
+                                 data$logsizet1),
                                na.rm=T),
                        U = max(c(data$logsizet0,
                                  data$logsizet1),
