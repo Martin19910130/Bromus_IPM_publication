@@ -8,6 +8,7 @@ options(stringsAsFactors = F)
 require(dplyr)
 require(ggplot2)
 require(readr)
+library(lme4)
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###         Load functions
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -173,23 +174,23 @@ boot_lam <- function(ii)
   #--------------------------------------
   # survival
   #--------------------------------------
-  sr_mod <- glm(survival ~ logsizet0, data = data, family = binomial())
+  sr_mod <- glmer(survival ~ logsizet0 + (1|plot), data = data, family = binomial)
   
   #--------------------------------------
   # growth
   #--------------------------------------
-  gr_mod <- lm(logsizet1 ~ logsizet0, data = data)
+  gr_mod <- glmer(logsizet1 ~ logsizet0 + (1|plot), data = data, family = gaussian)
   
   #--------------------------------------
   # flower probability
   #--------------------------------------
-  fl_mod <- glm(flower ~ logsizet0, data = data, family = binomial())
+  fl_mod <- glmer(flower ~ logsizet0 + (1|plot), data = data, family = binomial)
   
   #--------------------------------------
   # number of seeds per flowering plant
   #--------------------------------------
   data2 <- subset(data, flower == "1")
-  sefl_mod <- glm(round(seed_per_ind) ~ logsizet0, data = data2, family = 'poisson')
+  sefl_mod <- glmer(round(seed_per_ind) ~ logsizet0 + (1|plot), data = data2, family = poisson)
   
   #--------------------------------------
   # seedling per seed
@@ -245,15 +246,15 @@ boot_lam <- function(ii)
   new_size_sd <- sd(data_new_ind$logsizet1, na.rm = T)
   
   # store the parameters of the models
-  pars <- list(  surv_b0       = coef(sr_mod)[1],
-                 surv_b1       = coef(sr_mod)[2],
-                 grow_b0       = coef(gr_mod)[1],
-                 grow_b1       = coef(gr_mod)[2],
+  pars <- list(  surv_b0       = summary(sr_mod)$coefficients[1,1],
+                 surv_b1       = summary(sr_mod)$coefficients[2,1],
+                 grow_b0       = summary(gr_mod)$coefficients[1,1],
+                 grow_b1       = summary(gr_mod)$coefficients[2,1],
                  grow_sd       = summary(gr_mod)$sigma,
-                 seednum_b0    = coef(sefl_mod)[1],
-                 seednum_b1    = coef(sefl_mod)[2],
-                 flowprob_b0   = coef(fl_mod)[1],
-                 flowprob_b1   = coef(fl_mod)[2],
+                 seednum_b0    = summary(sefl_mod)$coefficients[1,1],
+                 seednum_b1    = summary(sefl_mod)$coefficients[2,1],
+                 flowprob_b0   = summary(fl_mod)$coefficients[1,1],
+                 flowprob_b1   = summary(fl_mod)$coefficients[2,1],
                  new_size_mean  = new_size_mean,
                  new_size_sd    = new_size_sd,
                  novSL_per_fl   = mean(Sl_per_subplot_nov18$seed_SL_nov18, na.rm = T),
@@ -293,7 +294,7 @@ dat_d <- dat_d[-(which(dat_d$sizet1 >= 30 & dat_d$new_plant == 1)),]
 demo_dat <- subset(dat_d, treatment == "ambient_mowing")
 seed_dat <- subset(dat_s, treatment == "ambient_mowing")
 
-lamb_amb_mow <- sapply(1:1000, FUN = boot_lam)
+lamb_amb_mow <- sapply(1:100, FUN = boot_lam)
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##            Ambient grazing
@@ -301,7 +302,7 @@ lamb_amb_mow <- sapply(1:1000, FUN = boot_lam)
 demo_dat <- subset(dat_d, treatment == "ambient_grazing")
 seed_dat <- subset(dat_s, treatment == "ambient_grazing")
 
-lamb_amb_gra <- sapply(1:1000, FUN = boot_lam)
+lamb_amb_gra <- sapply(1:100, FUN = boot_lam)
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##          Future mowing
@@ -309,7 +310,7 @@ lamb_amb_gra <- sapply(1:1000, FUN = boot_lam)
 demo_dat <- subset(dat_d, treatment == "future_mowing")
 seed_dat <- subset(dat_s, treatment == "future_mowing")
 
-lamb_fut_mow <- sapply(1:1000, FUN = boot_lam)
+lamb_fut_mow <- sapply(1:100, FUN = boot_lam)
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##          Future grazing
@@ -317,7 +318,7 @@ lamb_fut_mow <- sapply(1:1000, FUN = boot_lam)
 demo_dat <- subset(dat_d, treatment == "future_grazing")
 seed_dat <- subset(dat_s, treatment == "future_grazing")
 
-lamb_fut_gra <- sapply(1:1000, FUN = boot_lam)
+lamb_fut_gra <- sapply(1:100, FUN = boot_lam)
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##          Plot mean Lambdas
@@ -341,15 +342,19 @@ Results <- data.frame(lambda_mean = c(mean(lamb_amb_mow), mean(lamb_amb_gra),
 myPalette <- c("#0072B2", "#D55E00")
 
 ggplot(Results, aes(x = climate, y = lambda_mean, color = climate, shape = landuse)) + theme_classic() +
-  geom_line(aes(group = landuse ), col = "black") + scale_shape_manual(values=c(16, 17)) +
+  geom_line(aes(group = landuse , linetype = landuse), col = "black", position = position_dodge(.08)) + 
+  scale_shape_manual(values=c(16, 17)) +
   scale_colour_manual(values=myPalette) +
-  geom_point( size = 5, position = position_dodge(width = 0.08)) +
-  geom_errorbar(aes(ymax = lambda_U, ymin = lambda_L), width = .17, size = 1.2, position = position_dodge(0.08)) +
+  scale_linetype_manual(values = c("grazing" = "dashed" , "mowing" = "solid")) + 
+  geom_point( size = 3, position = position_dodge(width = 0.08)) +
+  geom_errorbar(aes(ymax = lambda_U, ymin = lambda_L), width = .17, size = 1.2,
+                position = position_dodge(0.08)) +
   theme(text = element_text(size = 20), 
         legend.position = c(0.87, 0.89), 
         legend.background = element_rect(fill="transparent"),
         legend.title = element_blank())  +
-  ylab("Asymptotic population growth rate (λ)") + xlab("Climate treatment") + guides(color = F)
+  ylab("Asymptotic population growth rate (λ)") + xlab("Climate treatment") + 
+  guides(color = F)
   
 ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/lambda.pdf", 
              plot = last_plot(), 
@@ -359,17 +364,40 @@ ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/lambda.pdf",
              height = 14, 
              units = "cm")
 
-## signifi
+
 savers=matrix(0, 1000, 1)
 
-for (i in 1:1000) 
-  {
+for (i in 1:1000) {
   
   savers[i]=lamb_amb_mow[sample(1:1000, 1)]-lamb_amb_gra[sample(1:1000, 1)]
   
 }
 
 sortedsaved=sort(savers)
-smaller_zero <- length(which(savers < 0))
 
-smaller_zero/1000
+library(readxl)
+
+"C:\\Users\\Julia\\Desktop\\Uni\\Masterarbeit\\Analyse"
+randtestdata <- read_excel("C:\\Users\\Julia\\Desktop\\Uni\\Publication\\Daten\\randtestdata.xlsx")
+
+
+
+ambgr <- randtestdata$amb_graz
+
+ambmow <- randtestdata$amb_mow
+
+
+
+savers=matrix(0, 1000, 1)
+
+for (i in 1:1000) {
+  
+  savers[i]=ambmow[sample(1:1000, 1)]-ambgr[sample(1:1000, 1)]
+  
+}
+
+
+
+sortedsaved=sort(savers)
+
+
