@@ -45,7 +45,7 @@ AIC_pub <- function(df, dep)
     z5 <- glm(df[, dep] ~ df[, "logsizet0"] + df[,"climate"] + df[,"management"], family = "poisson")
   }
   
-  x <- c(AICc(z1), AICc(z2), AICc(z3), AICc(z4),AICc(z5)) 
+  x <- c(AIC(z1), AIC(z2), AIC(z3), AIC(z4),AIC(z5)) 
   delta <- x - min(x)                   
   L <- exp(-0.5 * delta)            
   w <- L/sum(L)                     

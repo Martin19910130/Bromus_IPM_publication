@@ -78,6 +78,7 @@ demo_data[, "mean_seeds"] <- ifelse(demo_data$sample_year == 2018 & demo_data$tr
                                     seed_trea["future_mowing", "x"], demo_data$mean_seeds)
 
 demo_data$number_of_seeds <- demo_data$number_of_flowers * round(demo_data$mean_seeds)
+
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##    Subset data into 4 different treatments for the bin function
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -117,9 +118,6 @@ df_bins_flow <- do.call(rbind.data.frame, df_bins_flow)
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###                 Graphics
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-## color palette is outdated as we define the colors in the ggplot by hand now
-rbPalette <- c("#0072B2", "#D55E00")
-
 ## create a treatment column
 df_bins_surv$treatment <- paste(df_bins_surv$climate, df_bins_surv$management)
 df_bins_flow$treatment <- paste(df_bins_flow$climate, df_bins_flow$management)
@@ -211,6 +209,7 @@ flpr_pl <- ggplot(df_bins_flow, aes(x = x, y = y, shape = treatment, color = tre
   guides(color = guide_legend(""), linetype = guide_legend(""), shape = guide_legend(""))
 
 flpr_pl
+
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##      number of seeds per flower plot
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -401,71 +400,16 @@ new_size_pl <- ggplot(demo_dat_new, aes(x = management, y = logsizet1, fill = cl
 Fig_2 <- ggpubr::ggarrange(surv_pl, grow_pl, flpr_pl, nrse_pl, sl_seed_nov18,
                            sl_seed_apr19 , sl_surv_pl, new_size_pl, ncol = 2, nrow = 4, common.legend = T,
                            legend = "bottom")
-
+Fig_2
 #save the figure as pdf
-ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/FigVR_binned.pdf", 
-       plot = Fig_2, 
-       device = cairo_pdf, 
-       dpi = 1200, 
-       width = 18,
-       height = 15, 
-       units = "cm")
+#ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/FigVR_binned.pdf", 
+ #      plot = Fig_2, 
+  #     device = cairo_pdf, 
+   #    dpi = 1200, 
+    #   width = 18,
+     #  height = 15, 
+      # units = "cm")
 
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-##                AIC
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-AIC_pub <- function(df, dep)
-{
-  
-  if(dep == "logsizet1")
-  {
-    z1 <- lm(df[, dep] ~ df[, "logsizet0"]) 
-    z2 <- lm(df[, dep] ~ df[, "logsizet0"] + df[, "climate"]) 
-    z3 <- lm(df[, dep] ~ df[, "logsizet0"] + df[,"management"]) 
-    z4 <- lm(df[, dep] ~ df[, "logsizet0"] + df[,"climate"] * df[,"management"]) 
-    z5 <- lm(df[, dep] ~ df[, "logsizet0"] + df[,"climate"] + df[,"management"])
-  }
-  
-  if(dep == "survival" | dep == "flower")
-  {
-    z1 <- glm(df[, dep] ~ df[, "logsizet0"], family = "binomial")
-    z2 <- glm(df[, dep] ~ df[, "logsizet0"] + df[, "climate"], family = "binomial")
-    z3 <- glm(df[, dep] ~ df[, "logsizet0"] + df[,"management"], family = "binomial") 
-    z4 <- glm(df[, dep] ~ df[, "logsizet0"] + df[,"climate"] * df[,"management"], family = "binomial") 
-    z5 <- glm(df[, dep] ~ df[, "logsizet0"] + df[,"climate"] + df[,"management"], family = "binomial")
-  }
-  
-  if(dep == "number_of_seeds")
-  {
-    z1 <- glm(df[, dep] ~ df[, "logsizet0"], family = "poisson")
-    z2 <- glm(df[, dep] ~ df[, "logsizet0"] + df[, "climate"], family = "poisson")
-    z3 <- glm(df[, dep] ~ df[, "logsizet0"] + df[,"management"], family = "poisson") 
-    z4 <- glm(df[, dep] ~ df[, "logsizet0"] + df[,"climate"] * df[,"management"], family = "poisson") 
-    z5 <- glm(df[, dep] ~ df[, "logsizet0"] + df[,"climate"] + df[,"management"], family = "poisson")
-  }
-  
-  x <- c(AICc(z1), AICc(z2), AICc(z3), AICc(z4),AICc(z5)) 
-  delta <- x - min(x)                   
-  L <- exp(-0.5 * delta)            
-  w <- L/sum(L)                     
-  
-  w <- t(as.data.frame(w))
-  colnames(w) <- c("Null", "climate", "management", "climate*management", "climate+management")
-  return(w)  
-}
-
-dep <- c("survival", "logsizet1", "flower", "number_of_seeds")
-mod_compare <- c()
-for(i in 1:length(dep))
-{
-  mod_compare[i] <- list(AIC_pub(demo_data, dep[i]))
-  names(mod_compare)[i] <- paste(dep[i], "model", sep = "_")
-}
-
-mod_compare$survival_model
-mod_compare$logsizet1_model
-mod_compare$flower_model
-mod_compare$number_of_seeds_model
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##          LTRE, sensitivty, models
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -768,7 +712,7 @@ VR_amb <- ggplot(as.data.frame(amb_dif[1:14, ]), aes(y = values, x = myorder, fi
   geom_bar(stat = "identity") +
   ylim (-3.1, 3.1) +
   ggtitle("a)  Ambient") + 
-  ylab("grazing             mowing ") +
+  ylab("grazing       -      mowing ") +
   theme_bw() + theme(legend.position = "none") +
   theme(axis.title.x = element_blank(), axis.text.x=element_blank(), axis.ticks.x=element_blank(), axis.title.y = element_text(size = 12)) +
   scale_fill_manual(values =  mypalette) 
@@ -785,7 +729,7 @@ VR_fut <- ggplot(as.data.frame(fut_dif[1:14, ]), aes(y = values, x = myorder, fi
 VR_mow <- ggplot(as.data.frame(mow_dif[1:14, ]), aes(y = values, x = myorder, fill = mycol)) + 
   geom_bar(stat = "identity") +
   ylim (-3.1, 3.1) +
-  ggtitle("c) Mowing") + ylab("future             ambient") +  theme_bw() + 
+  ggtitle("c) Mowing") + ylab("future      -       ambient") +  theme_bw() + 
   theme(legend.position = "none") +
   theme(axis.title.x = element_blank(), axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_fill_manual(values =  mypalette)  +
@@ -805,13 +749,13 @@ VR_all <- grid.arrange(VR_amb, VR_fut, VR_mow, VR_gra,
                        layout_matrix = rbind(c(1, 2), c(3, 4)), 
                        widths = c(5.5, 5), heights = c(5, 5.8))
 
-ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_Dif_VR.pdf", 
-       plot = VR_all, 
-       device = cairo_pdf, 
-       dpi = 1200, 
-       width = 20,
-       height =15, 
-       units = "cm")
+#ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_Dif_VR.pdf", 
+ #      plot = VR_all, 
+  #     device = cairo_pdf, 
+   #    dpi = 1200, 
+    #   width = 20,
+     #  height =15, 
+      # units = "cm")
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##           Sensitivity & LTREs
@@ -872,7 +816,7 @@ LTRE_amb <- ggplot(as.data.frame(final_out5), aes(y = LTRE_scaled , x = myorder,
   geom_bar(stat = "identity") +
   ggtitle("a) Ambient") + 
   ylim (-0.82, 0.82) +
-  ylab("grazing             mowing") +
+  ylab("grazing       -      mowing") +
   theme_bw() + theme(legend.position = "none") + 
   theme(axis.title.x = element_blank(), axis.title.y = element_text(size = 12)) +
   scale_fill_manual(values =  mypalette) + 
@@ -984,11 +928,14 @@ final_out5 <- data.frame(pars = c("Survival", "Growth", "Reproduction", "Recruit
 final_out5$LTRE_scaled = as.numeric(final_out5$LTRE / sum(abs(final_out5$LTRE)))
 
 # Create Sensitivity figure
-sensitivity_mow <- ggplot(as.data.frame(final_out), aes(y = sensitivity, x = myorder, fill = mycol)) + geom_bar(stat = "identity") + 
+sensitivity_mow <- ggplot(as.data.frame(final_out), 
+                          aes(y = sensitivity, x = myorder, fill = mycol)) + 
+  geom_bar(stat = "identity") + 
   ylim (0, 70) +
   ggtitle("c) Mowing ambient * mowing future") + 
   theme_bw() + theme(legend.position = "none") +
-  theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_text(angle = 45, hjust = 1)) +  
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +  
   scale_x_discrete(labels = mylabels_VR) +
   scale_fill_manual(values =  mypalette) 
 
@@ -997,7 +944,7 @@ LTRE_mow <- ggplot(as.data.frame(final_out5), aes(y = LTRE_scaled , x = myorder,
   geom_bar(stat = "identity") +
   ggtitle("c) Mowing") + 
   ylim (-0.82, 0.82) +
-  ylab("future             ambient") +
+  ylab("future       -      ambient") +
   theme_bw() + theme(legend.position = "none") + 
   theme(axis.title.x = element_blank(), axis.title.y = element_text(size = 12)) +
   scale_fill_manual(values =  mypalette) + 
@@ -1071,24 +1018,25 @@ Sensitivity_all <- grid.arrange(sensitivity_amb, sensitivity_fut, sensitivity_mo
                                 layout_matrix = rbind(c(1, 2), c(3, 4)), 
                                 widths = c(5.2, 5.2), heights = c(5, 5.8))
 
-ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_Sensitivity.pdf", 
-       plot = Sensitivity_all, 
-       device = cairo_pdf, 
-       dpi = 1200, 
-       width = 20,
-       height =15, 
-       units = "cm")
+#ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_Sensitivity.pdf", 
+ #      plot = Sensitivity_all, 
+  #     device = cairo_pdf, 
+   #    dpi = 1200, 
+    #   width = 20,
+     #  height =15, 
+      # units = "cm")
 
 LTRE_all <- grid.arrange(LTRE_amb, LTRE_fut, LTRE_mow, LTRE_gra,
                          ncol = 2, nrow = 2, 
                          layout_matrix = rbind(c(1, 2), c(3, 4)), 
                          widths = c(5.5, 5), heights = c(4.8, 5.9))
 
-ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_LTRE.pdf", 
-       plot = LTRE_all, 
-       device = cairo_pdf, 
-       dpi = 1200, 
-       width = 20,
-       height =15, 
-       units = "cm")
+LTRE_all
+#ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_LTRE.pdf", 
+ #      plot = LTRE_all, 
+  #     device = cairo_pdf, 
+   #    dpi = 1200, 
+    #   width = 20,
+     #  height =15, 
+      # units = "cm")
 
