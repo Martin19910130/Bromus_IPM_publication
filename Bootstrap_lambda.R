@@ -362,39 +362,3 @@ ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/lambda.pdf",
        width = 18,
        height = 14, 
        units = "cm")
-
-
-savers=matrix(0, 1000, 1)
-
-for (i in 1:1000) {
-  
-  savers[i]=lamb_amb_mow[sample(1:1000, 1)]-lamb_amb_gra[sample(1:1000, 1)]
-  
-}
-
-sortedsaved=sort(savers)
-
-library(readxl)
-
-"C:\\Users\\Julia\\Desktop\\Uni\\Masterarbeit\\Analyse"
-randtestdata <- read_excel("C:\\Users\\Julia\\Desktop\\Uni\\Publication\\Daten\\randtestdata.xlsx")
-
-
-
-ambgr <- randtestdata$amb_graz
-
-ambmow <- randtestdata$amb_mow
-
-
-
-savers=matrix(0, 1000, 1)
-
-for (i in 1:1000) {
-  
-  savers[i]=ambmow[sample(1:1000, 1)]-ambgr[sample(1:1000, 1)]
-  
-}
-
-
-
-sortedsaved=sort(savers)
