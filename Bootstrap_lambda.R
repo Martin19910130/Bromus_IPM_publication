@@ -7,7 +7,6 @@ options(stringsAsFactors = F)
 
 require(dplyr)
 require(ggplot2)
-require(readr)
 library(lme4)
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###         Load functions
@@ -342,6 +341,9 @@ Results <- data.frame(lambda_mean = c(mean(lamb_amb_mow), mean(lamb_amb_gra),
                       treatment = c("ambient_mowing", "ambient_grazing", "future_mowing", "future_grazing"),
                       landuse = c("mowing", "grazing", "mowing", "grazing"),
                       climate = c("ambient", "ambient", "future", "future"))
+
+## Print and look at results
+Results
 
 ## Choose color palette
 myPalette <- c("#0072B2", "#D55E00")
