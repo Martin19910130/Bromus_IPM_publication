@@ -7,7 +7,7 @@ options(stringsAsFactors = F)
 
 require(dplyr)
 require(ggplot2)
-library(lme4)
+
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###         Load functions
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -16,7 +16,7 @@ library(lme4)
 ##  1. function, size range
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Transforms all values below/above limits in min/max size
-#this is to deal with unintentional eviction
+## this is to deal with unintentional eviction
 x_range <- function(x, pars){
   pmin(pmax(x, pars$L), pars$U)
 }
@@ -30,10 +30,10 @@ inv_logit <- function(x){ exp(x)/(1+exp(x)) }
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##  3. Growth function
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Growth (transition) from size x to size y
+## Growth (transition) from size x to size y
 gxy <- function(y,x,pars){
   xb <- x_range(x, pars)
-  # returns a *probability density distribution* for each x value
+  ## returns a *probability density distribution* for each x value
   return(dnorm(y, 
                mean = pars$grow_b0 + pars$grow_b1*xb, 
                sd   = pars$grow_sd) )
@@ -44,42 +44,42 @@ gxy <- function(y,x,pars){
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 sx<-function(x,pars){
   xb <- x_range(x, pars)
-  # survival prob. of each x size class 
+  ## survival prob. of each x size class 
   return( inv_logit(pars$surv_b0 + pars$surv_b1 * xb) )
 }
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##  5. transition function
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# transition: Survival * growth
+## transition: Survival * growth
 pxy<-function(y,x,pars){
   xb <- x_range(x, pars)
   return( sx(xb,pars) * gxy(y,xb,pars) )
 }
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 6. Production of flowers
+## 6. Production of flowers
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 fx1<-function(x,pars){
-  # probability of flowering of each x size class 
+  ## probability of flowering of each x size class 
   return( inv_logit(pars$flowprob_b0 + 
                       pars$flowprob_b1 * x) )
 }
 
 fx2<-function(x,pars){
-  #number of seeds per flowering plant based on size class
+  ## number of seeds per flowering plant based on size class
   return( exp( pars$seednum_b0 + 
                  pars$seednum_b1 * x) )
 }
 
-#put them together- probability of flowering * seeds per flowering plant
+## put them together- probability of flowering * seeds per flowering plant
 fx3<-function(x,pars){
   xb <- x_range(x, pars)
   return( fx1(xb,pars) * fx2(xb,pars) )
 }
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# 7. Size distribution of new plants
+## 7. Size distribution of new plants
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 newpl <- function(y, pars){
   dnorm( x    = y,
@@ -88,8 +88,8 @@ newpl <- function(y, pars){
 }
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#  Unintentional eviction using Merow's MEE article suggestion -----------
-#             Kernel function
+##  Unintentional eviction using Merow's MEE article suggestion -----------
+##             Kernel function
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ker_mee <- function(pars){
   
@@ -194,7 +194,6 @@ boot_lam <- function(ii)
   #--------------------------------------
   # seedling per seed
   #--------------------------------------
-  #data3 <- subset(demo_dat, subplot <= 3)
   data3 <- subset(data, subplot <= 3)
   
   # get the seedling count per subplot
@@ -294,51 +293,44 @@ dat_d <- dat_d[-(which(dat_d$sizet1 >= 30 & dat_d$new_plant == 1)),]
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##            Ambient mowing
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-demo_dat <- subset(dat_d, treatment == "ambient_mowing")
-seed_dat <- subset(dat_s, treatment == "ambient_mowing")
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-lamb_amb_mow <- sapply(1:1000, FUN = boot_lam)
-
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-##            Ambient grazing
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-demo_dat <- subset(dat_d, treatment == "ambient_grazing")
-seed_dat <- subset(dat_s, treatment == "ambient_grazing")
-
-lamb_amb_gra <- sapply(1:1000, FUN = boot_lam)
-
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-##          Future mowing
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-demo_dat <- subset(dat_d, treatment == "future_mowing")
-seed_dat <- subset(dat_s, treatment == "future_mowing")
-
-lamb_fut_mow <- sapply(1:1000, FUN = boot_lam)
-
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-##          Future grazing
-##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-demo_dat <- subset(dat_d, treatment == "future_grazing")
-seed_dat <- subset(dat_s, treatment == "future_grazing")
-
-lamb_fut_gra <- sapply(1:1000, FUN = boot_lam)
+lamb_list <- c()
+for(i in 1:length(unique(dat_d$treatment)))
+{
+  demo_dat <- subset(dat_d, treatment == unique(dat_d$treatment)[i])
+  seed_dat <- subset(dat_s, treatment == unique(dat_s$treatment)[i])
+  
+  lamb_list[i] <- list(sapply(1:1000, boot_lam))
+  names(lamb_list)[i] <- unique(dat_d$treatment)[i]
+}
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##          Plot mean Lambdas
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Create data frame with mean and Confidence intervalls
-Results <- data.frame(lambda_mean = c(mean(lamb_amb_mow), mean(lamb_amb_gra), 
-                                      mean(lamb_fut_mow), mean(lamb_fut_gra)),
-                      lambda_U = c(quantile(lamb_amb_mow, probs = c(0.025, 0.975))[2],
-                                   quantile(lamb_amb_gra, probs = c(0.025, 0.975))[2],
-                                   quantile(lamb_fut_mow, probs = c(0.025, 0.975))[2],
-                                   quantile(lamb_fut_gra, probs = c(0.025, 0.975))[2]),
-                      lambda_L = c(quantile(lamb_amb_mow, probs = c(0.025, 0.975))[1],
-                                   quantile(lamb_amb_gra, probs = c(0.025, 0.975))[1],
-                                   quantile(lamb_fut_mow, probs = c(0.025, 0.975))[1],
-                                   quantile(lamb_fut_gra, probs = c(0.025, 0.975))[1]),
-                      treatment = c("ambient_mowing", "ambient_grazing", "future_mowing", "future_grazing"),
+Results <- data.frame(lambda_mean = c(mean(lamb_list$ambient_mowing), 
+                                      mean(lamb_list$ambient_grazing), 
+                                      mean(lamb_list$future_mowing), 
+                                      mean(lamb_list$future_grazing)),
+                      lambda_U = c(quantile(lamb_list$ambient_mowing, 
+                                            probs = c(0.025, 0.975))[2],
+                                   quantile(lamb_list$ambient_grazing, 
+                                            probs = c(0.025, 0.975))[2],
+                                   quantile(lamb_list$future_mowing, 
+                                            probs = c(0.025, 0.975))[2],
+                                   quantile(lamb_list$future_grazing, 
+                                            probs = c(0.025, 0.975))[2]),
+                      lambda_L = c(quantile(lamb_list$ambient_mowing, 
+                                            probs = c(0.025, 0.975))[1],
+                                   quantile(lamb_list$ambient_grazing, 
+                                            probs = c(0.025, 0.975))[1],
+                                   quantile(lamb_list$future_mowing,
+                                            probs = c(0.025, 0.975))[1],
+                                   quantile(lamb_list$future_grazing,
+                                            probs = c(0.025, 0.975))[1]),
+                      treatment = c("ambient_mowing", "ambient_grazing", "future_mowing",
+                                    "future_grazing"),
                       landuse = c("mowing", "grazing", "mowing", "grazing"),
                       climate = c("ambient", "ambient", "future", "future"))
 
