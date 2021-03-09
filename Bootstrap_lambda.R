@@ -362,3 +362,20 @@ ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/lambda.pdf",
        width = 18,
        height = 14, 
        units = "cm")
+
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+##    Permutation test for difference
+##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+savers <- c()
+
+set.seed(1)
+for (i in 1:1000) {
+  
+  savers[i] <- lamb_list$ambient_mowing[sample(1:1000, 1)]-lamb_list$ambient_grazing[sample(1:1000, 1)]
+  
+}
+
+perm_pvalue <- length(which(sortedsaved <= 0.05))/1000
+
+
