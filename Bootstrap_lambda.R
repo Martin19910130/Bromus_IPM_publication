@@ -376,6 +376,6 @@ for (i in 1:1000) {
   
 }
 
-perm_pvalue <- length(which(sortedsaved <= 0.05))/1000
+perm_pvalue <- length(which(savers <= 0.05))/1000
 
 
