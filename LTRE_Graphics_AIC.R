@@ -11,6 +11,8 @@ library(wiqid)
 library(gridExtra)
 library(grid)
 
+rbPalette <- c("#0072B2", "#D55E00")
+
 df_binned_prop <- function(df, n_bins, siz_var, rsp_var)
 {
   
@@ -147,7 +149,7 @@ surv_pl <- ggplot(df_bins_surv, aes(x = x, y = y, shape = treatment, color = tre
   scale_y_continuous(breaks = c(0,1), limits = c(0,1)) + 
   scale_x_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
                      labels = c(0.25, 1, 5, 15, 50, 150)) +  
-  ggtitle("a) Plant survival") + 
+  ggtitle("(A) Plant survival") + 
   theme(legend.position = "", plot.title = element_text(size = 10)) + 
   guides(color = guide_legend(""), linetype = guide_legend(""), shape = guide_legend(""))
 
@@ -172,7 +174,8 @@ grow_pl <- ggplot(demo_data, aes(x = logsizet0, y = logsizet1, shape = treatment
                                 "future mowing" = 17)) + theme_classic() + 
   geom_smooth(method = "lm", se = F, size = 0.5) + 
   ylab(expression(paste("log (size ", italic("t"), " + 1)"))) + xlab("") +
-  theme(legend.position = "none", plot.title = element_text(size = 10)) + ggtitle("b) Plant growth") +
+  theme(legend.position = "none", plot.title = element_text(size = 10)) + 
+  ggtitle("(B) Plant growth") +
   scale_x_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
                      labels = c(0.25, 1, 5, 15, 50, 150)) +
   scale_y_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
@@ -203,7 +206,7 @@ flpr_pl <- ggplot(df_bins_flow, aes(x = x, y = y, shape = treatment, color = tre
   scale_y_continuous(breaks = c(0, 1), limits = c(0, 1)) + 
   ylab("Flower probability") + xlab(expression(paste("log (size ", italic("t"), ")"))) +
   theme(legend.position = "none", plot.title = element_text(size = 10)) +
-  labs(color = "Treatment") + ggtitle("c) Reproduction probability") + 
+  labs(color = "Treatment") + ggtitle("(C) Reproduction probability") + 
   scale_x_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
                      labels = c(0.25, 1, 5, 15, 50, 150)) + 
   guides(color = guide_legend(""), linetype = guide_legend(""), shape = guide_legend(""))
@@ -234,7 +237,7 @@ nrse_pl <- ggplot(demo_data2, aes(x = logsizet0, y = number_of_seeds, color = tr
                                 "future mowing" = 17)) +
   xlab(expression(paste("log (size ", italic("t"), ")"))) + 
   theme(legend.position = "none", plot.title = element_text(size = 10))+ 
-  ggtitle("d) Seeds per reproductive plant") + labs(color = "Treatment") + 
+  ggtitle("(D) Seeds per reproductive plant") + labs(color = "Treatment") + 
   scale_y_continuous(breaks=c(0, 1000, 2000)) +
   scale_x_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
                      labels = c(0.25, 1, 5, 15, 50, 150)) + 
@@ -300,7 +303,7 @@ mean_sl_seed$sd <- aggregate(nov_18$sl_per_seed, by = list(nov_18$climate, nov_1
 colnames(mean_sl_seed) <- c("climate", "management", "mean_sl", "sd")
 mean_sl_seed$se <- mean_sl_seed$sd / sqrt(length(mean_sl_seed))
 
-## PLot nov 18 seed to seedling
+## Plot nov 18 seed to seedling
 sl_seed_nov18 <- ggplot(mean_sl_seed, aes(x = management, y = mean_sl, fill = climate)) + 
   geom_bar(stat = "identity", position = position_dodge(width = 0.94)) + 
   geom_errorbar(aes(ymin = mean_sl_seed$mean_sl - mean_sl_seed$se, 
@@ -310,7 +313,7 @@ sl_seed_nov18 <- ggplot(mean_sl_seed, aes(x = management, y = mean_sl, fill = cl
                                    shape = management), 
              position = position_dodge(0.94)) + 
   scale_fill_manual(values = rbPalette) +
-  theme_classic() + ggtitle("e) Fall recruitment") +
+  theme_classic() + ggtitle("(E) Fall recruitment") +
   theme(legend.position = "none", axis.title.x=element_blank(), plot.title = element_text(size = 10)) +
   ylab("Seedlings / Subplot") + xlab("Treatment combination") +
   scale_y_continuous(breaks = seq(0, 0.3, 0.05), limits = c(-0.01, 0.25))
@@ -333,7 +336,7 @@ sl_seed_apr19 <- ggplot(mean_sl_seed_apr19, aes(x = management, y = mean_sl, fil
                                    shape = management), 
              position = position_dodge(0.94)) + 
   scale_fill_manual(values = rbPalette) +
-  theme_classic() + ggtitle("f) Spring recruitment") +
+  theme_classic() + ggtitle("(F) Spring recruitment") +
   theme(legend.position = "none", axis.title.x=element_blank(), plot.title = element_text(size = 10)) +
   ylab("Seedlings / Subplot") + xlab("Treatment combination") +
   scale_y_continuous(breaks = seq(0, 0.3, 0.05), limits = c(-0.01, 0.25))
@@ -381,7 +384,7 @@ sl_surv_pl <- ggplot(mean_sl_surv, aes(x = management, y = mean, fill = climate)
   scale_fill_manual(values = rbPalette) + scale_y_continuous(breaks=c(0, 0.5, 1), limits = c(0, 1)) +
   theme(legend.position = "none", axis.title.x=element_blank(), plot.title = element_text(size = 10)) +
   ylab("Survival rate") + xlab("Treatment combination") +
-  ggtitle("g) Establishment")
+  ggtitle("(G) Establishment")
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##      New plants size distribution 
@@ -390,7 +393,7 @@ demo_dat_new <- subset(demo_data, new_plant == 1)
 
 new_size_pl <- ggplot(demo_dat_new, aes(x = management, y = logsizet1, fill = climate)) +  geom_boxplot() + 
   geom_point(demo_dat_new, mapping = aes(x = management, y = logsizet1, shape = management),
-             position = position_dodge(0.75)) + ggtitle("h) Size distribution of new plants") +  
+             position = position_dodge(0.75)) + ggtitle("(H) Size distribution of new plants") +  
   scale_fill_manual(values = rbPalette) + theme_classic() +  
   theme(legend.position = "none", axis.title.x=element_blank(), plot.title = element_text(size = 10)) + 
   scale_y_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
@@ -402,13 +405,13 @@ Fig_2 <- ggpubr::ggarrange(surv_pl, grow_pl, flpr_pl, nrse_pl, sl_seed_nov18,
                            legend = "bottom")
 Fig_2
 #save the figure as pdf
-#ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/FigVR_binned.pdf", 
- #      plot = Fig_2, 
-  #     device = cairo_pdf, 
-   #    dpi = 1200, 
-    #   width = 18,
-     #  height = 15, 
-      # units = "cm")
+ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/FigVR_binned.jpeg", 
+       plot = Fig_2, 
+       device = "jpeg", 
+       dpi = 1200, 
+       width = 18,
+       height = 15, 
+       units = "cm")
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##          LTRE, sensitivty, models
@@ -805,7 +808,7 @@ final_out5$LTRE_scaled = as.numeric(final_out5$LTRE / sum(abs(final_out5$LTRE)))
 # Create Sensitivity figure
 sensitivity_amb <- ggplot(as.data.frame(final_out), aes(y = sensitivity, x = myorder, fill = mycol)) + geom_bar(stat = "identity") + 
   ylim (0, 70) +
-  ggtitle("a) Mowing ambient * grazing ambient") +
+  ggtitle("(A) Mowing ambient * grazing ambient") +
   theme_bw() + theme(legend.position = "none") +
   theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x=element_blank(),axis.ticks.x=element_blank()) +  
   scale_x_discrete(labels = mylabels_VR) +
@@ -814,9 +817,9 @@ sensitivity_amb <- ggplot(as.data.frame(final_out), aes(y = sensitivity, x = myo
 # Create scaled LTRE figure for life cycle stages
 LTRE_amb <- ggplot(as.data.frame(final_out5), aes(y = LTRE_scaled , x = myorder, fill = mycol)) + 
   geom_bar(stat = "identity") +
-  ggtitle("a) Ambient") + 
+  ggtitle("(A) Ambient") + 
   ylim (-0.82, 0.82) +
-  ylab("grazing       -      mowing") +
+  labs(y = expression(paste(Delta, lambda, " (grazing - mowing)"))) +
   theme_bw() + theme(legend.position = "none") + 
   theme(axis.title.x = element_blank(), axis.title.y = element_text(size = 12)) +
   scale_fill_manual(values =  mypalette) + 
@@ -868,7 +871,7 @@ final_out5$LTRE_scaled = as.numeric(final_out5$LTRE / sum(abs(final_out5$LTRE)))
 # Create Sensitivity figure
 sensitivity_fut <- ggplot(as.data.frame(final_out), aes(y = sensitivity, x = myorder, fill = mycol)) + geom_bar(stat = "identity") + 
   ylim (0, 70) +
-  ggtitle("b) Grazing future * mowing future ") + 
+  ggtitle("(B) Grazing future * mowing future ") + 
   theme_bw() + theme(legend.position = "none") +
   theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x=element_blank(),axis.ticks.x=element_blank()) +  
   scale_x_discrete(labels = mylabels_VR) +
@@ -877,7 +880,7 @@ sensitivity_fut <- ggplot(as.data.frame(final_out), aes(y = sensitivity, x = myo
 # Create scaled LTRE figure for life cycle stages
 LTRE_fut <- ggplot(as.data.frame(final_out5), aes(y = LTRE_scaled , x = myorder, fill = mycol)) + 
   geom_bar(stat = "identity") +
-  ggtitle("b) Future") + 
+  ggtitle("(B) Future") + 
   ylim (-0.82, 0.82) +
   theme_bw() + theme(legend.position = "none") + 
   theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
@@ -932,7 +935,7 @@ sensitivity_mow <- ggplot(as.data.frame(final_out),
                           aes(y = sensitivity, x = myorder, fill = mycol)) + 
   geom_bar(stat = "identity") + 
   ylim (0, 70) +
-  ggtitle("c) Mowing ambient * mowing future") + 
+  ggtitle("(C) Mowing ambient * mowing future") + 
   theme_bw() + theme(legend.position = "none") +
   theme(axis.title.x = element_blank(), axis.title.y = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1)) +  
@@ -942,9 +945,9 @@ sensitivity_mow <- ggplot(as.data.frame(final_out),
 # Create scaled LTRE figure for life cycle stages
 LTRE_mow <- ggplot(as.data.frame(final_out5), aes(y = LTRE_scaled , x = myorder, fill = mycol)) + 
   geom_bar(stat = "identity") +
-  ggtitle("c) Mowing") + 
+  ggtitle("(C) Mowing") + 
   ylim (-0.82, 0.82) +
-  ylab("future       -      ambient") +
+  labs(y = expression(paste(Delta, lambda, " (future - ambient)"))) +
   theme_bw() + theme(legend.position = "none") + 
   theme(axis.title.x = element_blank(), axis.title.y = element_text(size = 12)) +
   scale_fill_manual(values =  mypalette) + 
@@ -997,7 +1000,7 @@ final_out5$LTRE_scaled = as.numeric(final_out5$LTRE / sum(abs(final_out5$LTRE)))
 # Create Sensitivity figure
 sensitivity_gra <- ggplot(as.data.frame(final_out), aes(y = sensitivity, x = myorder, fill = mycol)) + geom_bar(stat = "identity") + 
   ylim (0, 70) +
-  ggtitle("d) Grazing ambient * grazing future") + #ylab("Sensitivity of  \u03BB") +
+  ggtitle("(D) Grazing ambient * grazing future") + #ylab("Sensitivity of  \u03BB") +
   theme_bw() + theme(legend.position = "none") +
   theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x = element_text(angle = 45, hjust = 1)) +  
   scale_x_discrete(labels = mylabels_VR) +
@@ -1006,7 +1009,7 @@ sensitivity_gra <- ggplot(as.data.frame(final_out), aes(y = sensitivity, x = myo
 # Create scaled LTRE figure for life cycle stages
 LTRE_gra <- ggplot(as.data.frame(final_out5), aes(y = LTRE_scaled , x = myorder, fill = mycol)) + 
   geom_bar(stat = "identity") +
-  ggtitle("d) Grazing") + 
+  ggtitle("(D) Grazing") + 
   ylim (-0.82, 0.82) +
   theme_bw() + theme(legend.position = "none") + 
   theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
@@ -1017,14 +1020,14 @@ Sensitivity_all <- grid.arrange(sensitivity_amb, sensitivity_fut, sensitivity_mo
                                 ncol = 2, nrow = 2, 
                                 layout_matrix = rbind(c(1, 2), c(3, 4)), 
                                 widths = c(5.2, 5.2), heights = c(5, 5.8))
-
-#ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_Sensitivity.pdf", 
- #      plot = Sensitivity_all, 
-  #     device = cairo_pdf, 
-   #    dpi = 1200, 
-    #   width = 20,
-     #  height =15, 
-      # units = "cm")
+Sensitivity_all
+ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_Sensitivity.jpeg", 
+       plot = Sensitivity_all, 
+       device = "jpeg", 
+       dpi = 1200, 
+       width = 20,
+       height =15, 
+       units = "cm")
 
 LTRE_all <- grid.arrange(LTRE_amb, LTRE_fut, LTRE_mow, LTRE_gra,
                          ncol = 2, nrow = 2, 
@@ -1032,11 +1035,11 @@ LTRE_all <- grid.arrange(LTRE_amb, LTRE_fut, LTRE_mow, LTRE_gra,
                          widths = c(5.5, 5), heights = c(4.8, 5.9))
 
 LTRE_all
-#ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_LTRE.pdf", 
- #      plot = LTRE_all, 
-  #     device = cairo_pdf, 
-   #    dpi = 1200, 
-    #   width = 20,
-     #  height =15, 
-      # units = "cm")
+ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_LTRE.jpeg", 
+       plot = LTRE_all, 
+      device = "jpeg", 
+       dpi = 1200, 
+       width = 20,
+       height =15, 
+       units = "cm")
 

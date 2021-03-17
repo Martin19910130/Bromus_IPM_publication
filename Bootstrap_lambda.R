@@ -352,12 +352,12 @@ ggplot(Results, aes(x = climate, y = lambda_mean, color = climate, shape = landu
         legend.position = c(0.87, 0.89), 
         legend.background = element_rect(fill="transparent"),
         legend.title = element_blank())  +
-  ylab("Asymptotic population growth rate (Î»)") + xlab("Climate treatment") + 
+  labs(y = expression(paste("Asymptotic population growth rate (", lambda, ")"))) + xlab("Climate treatment") + 
   guides(color = F)
 
-ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/lambda.pdf", 
+ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/lambda.jpeg", 
        plot = last_plot(), 
-       device = cairo_pdf, 
+       device = "jpeg", 
        dpi = 1200, 
        width = 18,
        height = 14, 
