@@ -11,7 +11,8 @@ require(ggplot2)
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###         Load functions
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+## add standard error function
+standard_error <- function(x) sd(x, na.rm = T) / sqrt(length(x))
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##  1. function, size range
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -304,7 +305,7 @@ for(i in 1:length(unique(dat_d$treatment)))
   lamb_list[i] <- list(sapply(1:1000, boot_lam))
   names(lamb_list)[i] <- unique(dat_d$treatment)[i]
 }
-
+lamb_list
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##          Plot mean Lambdas
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -340,20 +341,30 @@ Results
 ## Choose color palette
 myPalette <- c("#0072B2", "#D55E00")
 
-ggplot(Results, aes(x = climate, y = lambda_mean, color = climate, shape = landuse)) + theme_classic() +
-  geom_line(aes(group = landuse , linetype = landuse), col = "black", position = position_dodge(.08)) + 
-  scale_shape_manual(values=c(16, 17)) +
-  scale_colour_manual(values=myPalette) +
+ggplot(Results, aes(x = climate, y = lambda_mean, color = climate, shape = landuse)) + 
+  theme_classic() +
+  geom_line(aes(linetype = landuse, group = landuse), col = "black", 
+            position = position_dodge(.08), show.legend = F) + 
+  scale_shape_manual(values=c("grazing" = 21, "mowing" = 17)) +
+  scale_colour_manual(values=c("ambient" = "black", "future" = "black"), 
+                      labels = c("grazing", "mowing")) +
   scale_linetype_manual(values = c("grazing" = "dashed" , "mowing" = "solid")) + 
-  geom_point( size = 3, position = position_dodge(width = 0.08)) +
-  geom_errorbar(aes(ymax = lambda_U, ymin = lambda_L), width = .17, size = 1.2,
+  geom_errorbar(aes(ymax = lambda_U, ymin = lambda_L), width = .15, size = 0.8,
                 position = position_dodge(0.08)) +
+  geom_point(size = 4, position = position_dodge(width = 0.08), 
+             mapping = aes(fill = landuse)) +
+  scale_fill_manual(values = c("white", "white")) + 
   theme(text = element_text(size = 20), 
         legend.position = c(0.87, 0.89), 
         legend.background = element_rect(fill="transparent"),
         legend.title = element_blank())  +
-  labs(y = expression(paste("Asymptotic population growth rate (", lambda, ")"))) + xlab("Climate treatment") + 
-  guides(color = F)
+  labs(y = expression(paste("Asymptotic population growth rate (", lambda, ")"))) +
+  xlab("Climate treatment") + 
+  guides(color = guide_legend(override.aes = list(shape = c(21,17),
+                                                  linetype = c("dashed", "solid"), 
+                                                  color = c("black", "black")), 
+                              title = ""), 
+         shape = F, linetype = F, fill = F)
 
 ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/lambda.jpeg", 
        plot = last_plot(), 
@@ -378,4 +389,169 @@ for (i in 1:1000) {
 
 perm_pvalue <- length(which(savers <= 0.05))/1000
 
+## calculate mean and se for the parameter of the bootstraps
+boot_lam <- function(ii)
+{
+  # set the random number generator
+  set.seed(ii)
 
+  # sample the data
+  data <- sample_n(demo_dat, nrow(demo_dat), replace = T)
+  data_s <- sample_n(seed_dat, nrow(seed_dat), replace = T)
+  
+  # calculate the mean seeds 
+  mean_seed <- mean(data_s$number_of_seeds, na.rm = T)
+  
+  # add the mean seeds to the demography data
+  data$mean_seed <- ifelse(data$sample_year == 2018, mean_seed, NA)
+  data$seed_per_ind <- data$mean_seed * data$number_of_flowers
+  
+  #--------------------------------------
+  # survival
+  #--------------------------------------
+  sr_mod <- glm(survival ~ logsizet0, data = data, family = binomial())
+  
+  #--------------------------------------
+  # growth
+  #--------------------------------------
+  gr_mod <- lm(logsizet1 ~ logsizet0, data = data)
+  
+  #--------------------------------------
+  # flower probability
+  #--------------------------------------
+  fl_mod <- glm(flower ~ logsizet0, data = data, family = binomial())
+  
+  #--------------------------------------
+  # number of seeds per flowering plant
+  #--------------------------------------
+  data2 <- subset(data, flower == "1")
+  sefl_mod <- glm(round(seed_per_ind) ~ logsizet0, data = data2, family = poisson)
+  
+  #--------------------------------------
+  # seedling per seed
+  #--------------------------------------
+  data3 <- subset(data, subplot <= 3)
+  
+  # get the seedling count per subplot
+  Sl_per_subplot_apr18 <- unique(data3[, c("plot", "subplot", "apr18SL")])
+  Sl_per_subplot_nov18 <- unique(data3[, c("plot", "subplot", "nov18SL")])
+  Sl_per_subplot_apr19 <- unique(data3[, c("plot", "subplot", "apr19SL")])
+  
+  # NA's are actually zero seedlings
+  Sl_per_subplot_apr18$apr18SL[is.na(Sl_per_subplot_apr18$apr18SL)] <- 0 
+  Sl_per_subplot_nov18$nov18SL[is.na(Sl_per_subplot_nov18$nov18SL)] <- 0 
+  Sl_per_subplot_apr19$apr19SL[is.na(Sl_per_subplot_apr19$apr19SL)] <- 0
+  
+  # calculate the sum of seeds per subplot
+  seedling_per_seed <- aggregate(data3$seed_per_ind, by = list(data3$plot,
+                                                               data3$subplot), FUN = sum, na.rm = T)
+  
+  Sl_per_subplot_apr18 <- Sl_per_subplot_apr18[order(Sl_per_subplot_apr18$plot,
+                                                     Sl_per_subplot_apr18$subplot),]
+  Sl_per_subplot_nov18 <- Sl_per_subplot_nov18[order(Sl_per_subplot_nov18$plot,
+                                                     Sl_per_subplot_nov18$subplot),]
+  Sl_per_subplot_apr19 <- Sl_per_subplot_apr19[order(Sl_per_subplot_apr19$plot, 
+                                                     Sl_per_subplot_apr19$subplot),]
+  seedling_per_seed <- seedling_per_seed[order(seedling_per_seed$Group.1, 
+                                               seedling_per_seed$Group.2),]
+  
+  Sl_per_subplot_nov18$seeds <- ifelse(Sl_per_subplot_nov18$plot == seedling_per_seed$Group.1 & 
+                                         Sl_per_subplot_nov18$subplot == seedling_per_seed$Group.2, 
+                                       seedling_per_seed$x, NA)
+  Sl_per_subplot_nov18 <- subset(Sl_per_subplot_nov18, seeds > 0)
+  
+  Sl_per_subplot_apr19$seeds <- ifelse(Sl_per_subplot_apr19$plot == seedling_per_seed$Group.1 & 
+                                         Sl_per_subplot_apr19$subplot == seedling_per_seed$Group.2, 
+                                       seedling_per_seed$x, NA)
+  Sl_per_subplot_apr19 <- subset(Sl_per_subplot_apr19, seeds > 0)
+  
+  # calculate the turnover of seeds to seedlings
+  Sl_per_subplot_nov18$seed_SL_nov18 <- Sl_per_subplot_nov18$nov18SL / Sl_per_subplot_nov18$seeds
+  Sl_per_subplot_apr19$seed_SL_apr19 <- Sl_per_subplot_apr19$apr19SL / Sl_per_subplot_apr19$seeds
+  seedling_per_seed[seedling_per_seed == Inf] <- NA
+  seedling_per_seed[is.na(seedling_per_seed)] <- NA
+  
+  #--------------------------------
+  # Seedling survival
+  #--------------------------------
+  sl_surv <- sum(data3$new_plant, na.rm = T) / (sum(Sl_per_subplot_apr18$apr18SL) + sum(Sl_per_subplot_nov18$nov18SL))
+  
+  #--------------------------------
+  # new Individual size
+  #--------------------------------
+  data_new_ind <- subset(data, new_plant == 1)
+  new_size_mean <- mean(data_new_ind$logsizet1, na.rm = T)
+  new_size_sd <- sd(data_new_ind$logsizet1, na.rm = T)
+  
+  # store the parameters of the models
+  pars <- data.frame(  surv_b0       = summary(sr_mod)$coefficients[1,1],
+                 surv_b1       = summary(sr_mod)$coefficients[2,1],
+                 grow_b0       = summary(gr_mod)$coefficients[1,1],
+                 grow_b1       = summary(gr_mod)$coefficients[2,1],
+                 grow_sd       = summary(gr_mod)$sigma,
+                 seednum_b0    = summary(sefl_mod)$coefficients[1,1],
+                 seednum_b1    = summary(sefl_mod)$coefficients[2,1],
+                 flowprob_b0   = summary(fl_mod)$coefficients[1,1],
+                 flowprob_b1   = summary(fl_mod)$coefficients[2,1],
+                 new_size_mean  = new_size_mean,
+                 new_size_sd    = new_size_sd,
+                 novSL_per_fl   = mean(Sl_per_subplot_nov18$seed_SL_nov18, na.rm = T),
+                 aprilSL_per_fl = mean(Sl_per_subplot_apr19$seed_SL_apr19, na.rm = T),
+                 SL_surv        = sl_surv,
+                 L = min( c(data$logsizet0,
+                            data$logsizet1),
+                          na.rm=T),
+                 U = max( c(data$logsizet0,
+                            data$logsizet1),
+                          na.rm=T),
+                 L_obs = min( c(data$logsizet0,
+                                data$logsizet1),
+                              na.rm=T),
+                 U_obs = max( c(data$logsizet0,
+                                data$logsizet1),
+                              na.rm=T),
+                 n = 200
+  )
+  
+  # calculate Lambda
+  Re(eigen(ker_mee(pars)$k_yx)$value[1])
+  return(pars)
+}
+
+
+
+## ambient grazing
+demo_dat <- subset(dat_d, treatment == "ambient_grazing")
+seed_dat <- subset(dat_s, treatment == "ambient_grazing")
+
+pars_amb_gra <- matrix(unlist(mapply(1:1000, FUN =  boot_lam)), ncol = 1000, byrow = F)
+rownames(pars_amb_gra) <- rownames(mapply(1, FUN = boot_lam))
+rowMeans(pars_amb_gra)
+apply(pars_amb_gra, 1, FUN = standard_error)
+
+## ambient mowing
+demo_dat <- subset(dat_d, treatment == "ambient_mowing")
+seed_dat <- subset(dat_s, treatment == "ambient_mowing")
+
+pars_amb_mow <- matrix(unlist(mapply(1:1000, FUN =  boot_lam)), ncol = 1000, byrow = F)
+rownames(pars_amb_mow) <- rownames(mapply(1, FUN = boot_lam))
+rowMeans(pars_amb_mow)
+apply(pars_amb_mow, 1, FUN = standard_error)
+
+## future grazing
+demo_dat <- subset(dat_d, treatment == "future_grazing")
+seed_dat <- subset(dat_s, treatment == "future_grazing")
+
+pars_fut_gra <- matrix(unlist(mapply(1:1000, FUN =  boot_lam)), ncol = 1000, byrow = F)
+rownames(pars_fut_gra) <- rownames(mapply(1, FUN = boot_lam))
+rowMeans(pars_fut_gra)
+apply(pars_fut_gra, 1, FUN = standard_error)
+
+## future mowing
+demo_dat <- subset(dat_d, treatment == "future_mowing")
+seed_dat <- subset(dat_s, treatment == "future_mowing")
+
+pars_fut_mow <- matrix(unlist(mapply(1:1000, FUN =  boot_lam)), ncol = 1000, byrow = F)
+rownames(pars_fut_mow) <- rownames(mapply(1, FUN = boot_lam))
+rowMeans(pars_fut_mow)
+apply(pars_fut_mow, 1, FUN = standard_error)
