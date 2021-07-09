@@ -10,6 +10,10 @@ library(dplyr)
 library(wiqid)
 library(gridExtra)
 library(grid)
+library(patchwork)
+
+## change the resolution you want your figures stored in
+res <- 1500
 
 rbPalette <- c("#0072B2", "#D55E00")
 
@@ -46,6 +50,7 @@ df_binned_prop <- function(df, n_bins, siz_var, rsp_var)
               y = y_binned )
 }
 
+rotate <- function(x) t(apply(x, 2, rev))
 
 mylegend <- g_legend <- function(a.gplot)
 {
@@ -61,7 +66,7 @@ mylegend <- g_legend <- function(a.gplot)
 demo_data <- read.csv("https://raw.githubusercontent.com/Martin19910130/Bromus_IPM_publication/master/Bro_Demography.csv")
 seed_data <- read.csv("https://raw.githubusercontent.com/Martin19910130/Bromus_IPM_publication/master/Bro_Seed_data.csv")
 
-## Delete the new plants which grow bigger then 30
+## Delete the new plants which grew bigger then 30
 demo_data <- demo_data[-(which(demo_data$sizet1 >= 30 & demo_data$new_plant == 1)),]
 
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -150,7 +155,8 @@ surv_pl <- ggplot(df_bins_surv, aes(x = x, y = y, shape = treatment, color = tre
   scale_x_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
                      labels = c(0.25, 1, 5, 15, 50, 150)) +  
   ggtitle("(A) Plant survival") + 
-  theme(legend.position = "", plot.title = element_text(size = 10)) + 
+  theme(legend.position = "", plot.title = element_text(size = 10), 
+        aspect.ratio = 0.5) + 
   guides(color = guide_legend(""), linetype = guide_legend(""), shape = guide_legend(""))
 
 surv_pl
@@ -174,7 +180,8 @@ grow_pl <- ggplot(demo_data, aes(x = logsizet0, y = logsizet1, shape = treatment
                                 "future mowing" = 17)) + theme_classic() + 
   geom_smooth(method = "lm", se = F, size = 0.5) + 
   ylab(expression(paste("log (size ", italic("t"), " + 1)"))) + xlab("") +
-  theme(legend.position = "none", plot.title = element_text(size = 10)) + 
+  theme(legend.position = "none", plot.title = element_text(size = 10), 
+        aspect.ratio = 0.5) + 
   ggtitle("(B) Plant growth") +
   scale_x_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
                      labels = c(0.25, 1, 5, 15, 50, 150)) +
@@ -205,7 +212,8 @@ flpr_pl <- ggplot(df_bins_flow, aes(x = x, y = y, shape = treatment, color = tre
               method = "glm" , method.args = list(family = "binomial"), se = F, size = .5) +
   scale_y_continuous(breaks = c(0, 1), limits = c(0, 1)) + 
   ylab("Flower probability") + xlab(expression(paste("log (size ", italic("t"), ")"))) +
-  theme(legend.position = "none", plot.title = element_text(size = 10)) +
+  theme(legend.position = "none", plot.title = element_text(size = 10), 
+        aspect.ratio = 0.5) +
   labs(color = "Treatment") + ggtitle("(C) Reproduction probability") + 
   scale_x_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
                      labels = c(0.25, 1, 5, 15, 50, 150)) + 
@@ -236,7 +244,8 @@ nrse_pl <- ggplot(demo_data2, aes(x = logsizet0, y = number_of_seeds, color = tr
                                 "ambient mowing" = 17,
                                 "future mowing" = 17)) +
   xlab(expression(paste("log (size ", italic("t"), ")"))) + 
-  theme(legend.position = "none", plot.title = element_text(size = 10))+ 
+  theme(legend.position = "none", plot.title = element_text(size = 10),
+        aspect.ratio = 0.5) + 
   ggtitle("(D) Seeds per reproductive plant") + labs(color = "Treatment") + 
   scale_y_continuous(breaks=c(0, 1000, 2000)) +
   scale_x_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
@@ -314,8 +323,9 @@ sl_seed_nov18 <- ggplot(mean_sl_seed, aes(x = management, y = mean_sl, fill = cl
              position = position_dodge(0.94)) + 
   scale_fill_manual(values = rbPalette) +
   theme_classic() + ggtitle("(E) Fall recruitment") +
-  theme(legend.position = "none", axis.title.x=element_blank(), plot.title = element_text(size = 10)) +
-  ylab("Seedlings / Subplot") + xlab("Treatment combination") +
+  theme(legend.position = "none", axis.title.x=element_blank(), 
+        plot.title = element_text(size = 10), aspect.ratio = 0.5) +
+  ylab("Seedlings / Quadrat") + xlab("Treatment combination") +
   scale_y_continuous(breaks = seq(0, 0.3, 0.05), limits = c(-0.01, 0.25))
 
 ## apr 19 seeds to seedling
@@ -337,8 +347,9 @@ sl_seed_apr19 <- ggplot(mean_sl_seed_apr19, aes(x = management, y = mean_sl, fil
              position = position_dodge(0.94)) + 
   scale_fill_manual(values = rbPalette) +
   theme_classic() + ggtitle("(F) Spring recruitment") +
-  theme(legend.position = "none", axis.title.x=element_blank(), plot.title = element_text(size = 10)) +
-  ylab("Seedlings / Subplot") + xlab("Treatment combination") +
+  theme(legend.position = "none", axis.title.x=element_blank(),
+        plot.title = element_text(size = 10), aspect.ratio = 0.5) +
+  ylab("Seedlings / Quadrat") + xlab("Treatment combination") +
   scale_y_continuous(breaks = seq(0, 0.3, 0.05), limits = c(-0.01, 0.25))
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -382,7 +393,8 @@ sl_surv_pl <- ggplot(mean_sl_surv, aes(x = management, y = mean, fill = climate)
   geom_point(sl_surv, mapping = aes(y = sl_surv, x = management, shape = management), 
              position = position_dodge(0.94)) +  theme_classic() + 
   scale_fill_manual(values = rbPalette) + scale_y_continuous(breaks=c(0, 0.5, 1), limits = c(0, 1)) +
-  theme(legend.position = "none", axis.title.x=element_blank(), plot.title = element_text(size = 10)) +
+  theme(legend.position = "none", axis.title.x=element_blank(), 
+        plot.title = element_text(size = 10), aspect.ratio = 0.5) +
   ylab("Survival rate") + xlab("Treatment combination") +
   ggtitle("(G) Establishment")
 
@@ -395,20 +407,22 @@ new_size_pl <- ggplot(demo_dat_new, aes(x = management, y = logsizet1, fill = cl
   geom_point(demo_dat_new, mapping = aes(x = management, y = logsizet1, shape = management),
              position = position_dodge(0.75)) + ggtitle("(H) Size distribution of new plants") +  
   scale_fill_manual(values = rbPalette) + theme_classic() +  
-  theme(legend.position = "none", axis.title.x=element_blank(), plot.title = element_text(size = 10)) + 
+  theme(legend.position = "none", axis.title.x=element_blank(), 
+        plot.title = element_text(size = 10), aspect.ratio = 0.5) + 
   scale_y_continuous(breaks = c(-1.38629 ,0 , 1.6094, 2.70805, 3.9120, 5.0106), 
                      labels = c(0.25, 1, 5, 15, 50, 150)) + 
   ylab(expression(paste("log (size ", italic("t"), " + 1)"))) 
 
 Fig_2 <- ggpubr::ggarrange(surv_pl, grow_pl, flpr_pl, nrse_pl, sl_seed_nov18,
                            sl_seed_apr19 , sl_surv_pl, new_size_pl, ncol = 2, nrow = 4, common.legend = T,
-                           legend = "bottom")
+                           legend = "bottom", align = "hv", widths = 3, heights = 5)
 Fig_2
+
 #save the figure as pdf
-ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/FigVR_binned.jpeg", 
+ggsave("C:\\Users/ma22buky/Documents/Julia_Paper/FigVR_binned.tiff", 
        plot = Fig_2, 
-       device = "jpeg", 
-       dpi = 1200, 
+       device = "tiff", 
+       dpi = res, 
        width = 18,
        height = 15, 
        units = "cm")
@@ -433,22 +447,26 @@ LTRE_fun <- function(demo_data)
   # survival
   #--------------------------------------
   sr_mod <- glm(survival ~ logsizet0, data = data, family = binomial())
+  summary(sr_mod)
   
   #--------------------------------------
   # growth
   #--------------------------------------
   gr_mod <- lm(logsizet1 ~ logsizet0, data = data)
+  summary(gr_mod)
   
   #--------------------------------------
   # flower probability
   #--------------------------------------
   fl_mod <- glm(flower ~ logsizet0, data = data, family = binomial())
+  summary(fl_mod)
   
   #--------------------------------------
   # number of seeds per flowering plant
   #--------------------------------------
   data2 <- subset(data, flower == "1")
   sefl_mod <- glm(round(seed_per_ind) ~ logsizet0, data = data2, family = 'poisson')
+  summary(sefl_mod)
   
   #--------------------------------------
   # seedling per seed
@@ -732,7 +750,7 @@ VR_fut <- ggplot(as.data.frame(fut_dif[1:14, ]), aes(y = values, x = myorder, fi
 VR_mow <- ggplot(as.data.frame(mow_dif[1:14, ]), aes(y = values, x = myorder, fill = mycol)) + 
   geom_bar(stat = "identity") +
   ylim (-3.1, 3.1) +
-  ggtitle("c) Mowing") + ylab("future      -       ambient") +  theme_bw() + 
+  ggtitle("c) Mowing") + ylab("ambient      -       future") +  theme_bw() + 
   theme(legend.position = "none") +
   theme(axis.title.x = element_blank(), axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_fill_manual(values =  mypalette)  +
@@ -752,13 +770,13 @@ VR_all <- grid.arrange(VR_amb, VR_fut, VR_mow, VR_gra,
                        layout_matrix = rbind(c(1, 2), c(3, 4)), 
                        widths = c(5.5, 5), heights = c(5, 5.8))
 
-#ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_Dif_VR.pdf", 
- #      plot = VR_all, 
-  #     device = cairo_pdf, 
-   #    dpi = 1200, 
-    #   width = 20,
-     #  height =15, 
-      # units = "cm")
+ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_Dif_VR.pdf", 
+       plot = VR_all, 
+       device = "tiff", 
+       dpi = res, 
+       width = 20,
+       height =15, 
+       units = "cm")
 
 ##~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##           Sensitivity & LTREs
@@ -812,14 +830,15 @@ sensitivity_amb <- ggplot(as.data.frame(final_out), aes(y = sensitivity, x = myo
   theme_bw() + theme(legend.position = "none") +
   theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x=element_blank(),axis.ticks.x=element_blank()) +  
   scale_x_discrete(labels = mylabels_VR) +
-  scale_fill_manual(values =  mypalette) 
+  scale_fill_manual(values =  mypalette) + 
+  labs(y = expression(paste("Sensitivity of ", lambda)))
 
 # Create scaled LTRE figure for life cycle stages
 LTRE_amb <- ggplot(as.data.frame(final_out5), aes(y = LTRE_scaled , x = myorder, fill = mycol)) + 
   geom_bar(stat = "identity") +
   ggtitle("(A) Ambient") + 
   ylim (-0.82, 0.82) +
-  labs(y = expression(paste(Delta, lambda, " (grazing - mowing)"))) +
+  labs(y = expression(paste(Delta, lambda, " (mowing - grazing)"))) +
   theme_bw() + theme(legend.position = "none") + 
   theme(axis.title.x = element_blank(), axis.title.y = element_text(size = 12)) +
   scale_fill_manual(values =  mypalette) + 
@@ -873,7 +892,8 @@ sensitivity_fut <- ggplot(as.data.frame(final_out), aes(y = sensitivity, x = myo
   ylim (0, 70) +
   ggtitle("(B) Grazing future * mowing future ") + 
   theme_bw() + theme(legend.position = "none") +
-  theme(axis.title.x = element_blank(), axis.title.y = element_blank(), axis.text.x=element_blank(),axis.ticks.x=element_blank()) +  
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank(),
+        axis.text.x=element_blank(),axis.ticks.x=element_blank()) +  
   scale_x_discrete(labels = mylabels_VR) +
   scale_fill_manual(values =  mypalette) 
 
@@ -903,7 +923,7 @@ for(i in 1:14)
   final_out[i, "lambda_ori"] <- Re(eigen(ker_mee(pars_man)$k_yx)$value[1])
   
   # calculate Lambda from manipulated combined pars
-  pars_man[1,i] <- pars_man[1,i] + 0.001
+  pars_man[1, i] <- pars_man[1,i] + 0.001
   final_out[i, "lambda_fal"] <- Re(eigen(ker_mee(pars_man)$k_yx)$value[1])
 }
 final_out
@@ -937,22 +957,23 @@ sensitivity_mow <- ggplot(as.data.frame(final_out),
   ylim (0, 70) +
   ggtitle("(C) Mowing ambient * mowing future") + 
   theme_bw() + theme(legend.position = "none") +
-  theme(axis.title.x = element_blank(), axis.title.y = element_blank(),
+  theme(axis.title.x = element_blank(),
         axis.text.x = element_text(angle = 45, hjust = 1)) +  
   scale_x_discrete(labels = mylabels_VR) +
-  scale_fill_manual(values =  mypalette) 
+  scale_fill_manual(values =  mypalette) + 
+  labs(y = expression(paste("Sensitivity of ", lambda)))
 
 # Create scaled LTRE figure for life cycle stages
 LTRE_mow <- ggplot(as.data.frame(final_out5), aes(y = LTRE_scaled , x = myorder, fill = mycol)) + 
   geom_bar(stat = "identity") +
   ggtitle("(C) Mowing") + 
   ylim (-0.82, 0.82) +
-  labs(y = expression(paste(Delta, lambda, " (future - ambient)"))) +
+  labs(y = expression(paste(Delta, lambda, " (ambient - future)"))) +
   theme_bw() + theme(legend.position = "none") + 
   theme(axis.title.x = element_blank(), axis.title.y = element_text(size = 12)) +
   scale_fill_manual(values =  mypalette) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_x_discrete(labels = mylabels_LTRE)
-
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  scale_x_discrete(labels = mylabels_LTRE)
 
 ## grazing
 
@@ -1014,7 +1035,8 @@ LTRE_gra <- ggplot(as.data.frame(final_out5), aes(y = LTRE_scaled , x = myorder,
   theme_bw() + theme(legend.position = "none") + 
   theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
   scale_fill_manual(values =  mypalette) + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + scale_x_discrete(labels = mylabels_LTRE)
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  scale_x_discrete(labels = mylabels_LTRE)
 
 Sensitivity_all <- grid.arrange(sensitivity_amb, sensitivity_fut, sensitivity_mow, sensitivity_gra,
                                 ncol = 2, nrow = 2, 
@@ -1024,7 +1046,7 @@ Sensitivity_all
 ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_Sensitivity.jpeg", 
        plot = Sensitivity_all, 
        device = "jpeg", 
-       dpi = 1200, 
+       dpi = res, 
        width = 20,
        height =15, 
        units = "cm")
@@ -1035,11 +1057,297 @@ LTRE_all <- grid.arrange(LTRE_amb, LTRE_fut, LTRE_mow, LTRE_gra,
                          widths = c(5.5, 5), heights = c(4.8, 5.9))
 
 LTRE_all
-ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_LTRE.jpeg", 
+ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_LTRE.tiff", 
        plot = LTRE_all, 
-      device = "jpeg", 
-       dpi = 1200, 
+      device = "tiff", 
+       dpi = res, 
        width = 20,
        height =15, 
        units = "cm")
 
+## sensitivity just treatments
+sens_amb_gra <- data.frame()
+sens_fut_gra <- data.frame()
+sens_amb_mow <- data.frame()
+sens_fut_mow <- data.frame()
+
+
+
+for(i in 1:14)
+{
+  ## ambient grazing
+  sens_amb_gra[i, "ori_lambda"] <- Re(eigen(ker_mee(par_ag)$k_yx)$value[1])
+  par_ag_new <- par_ag
+  par_ag_new[1,i] <- par_ag[1, i] + 0.001
+  sens_amb_gra[i, "new_lambda"] <- Re(eigen(ker_mee(par_ag_new)$k_yx)$value[1])
+  sens_amb_gra[i, "changed_par"] <- names(par_ag_new)[i]
+  
+  ## ambient mowing
+  sens_amb_mow[i, "ori_lambda"] <- Re(eigen(ker_mee(par_am)$k_yx)$value[1])
+  par_am_new <- par_am
+  par_am_new[1,i] <- par_am[1, i] + 0.001
+  sens_amb_mow[i, "new_lambda"] <- Re(eigen(ker_mee(par_am_new)$k_yx)$value[1])
+  sens_amb_mow[i, "changed_par"] <- names(par_am_new)[i]
+  
+  ## future grazing
+  sens_fut_gra[i, "ori_lambda"] <- Re(eigen(ker_mee(par_fg)$k_yx)$value[1])
+  par_fg_new <- par_fg
+  par_fg_new[1,i] <- par_fg[1, i] + 0.001
+  sens_fut_gra[i, "new_lambda"] <- Re(eigen(ker_mee(par_fg_new)$k_yx)$value[1])
+  sens_fut_gra[i, "changed_par"] <- names(par_fg_new)[i]
+  
+  ## future mowing
+  sens_fut_mow[i, "ori_lambda"] <- Re(eigen(ker_mee(par_fm)$k_yx)$value[1])
+  par_fm_new <- par_fm
+  par_fm_new[1,i] <- par_fm[1, i] + 0.001
+  sens_fut_mow[i, "new_lambda"] <- Re(eigen(ker_mee(par_fm_new)$k_yx)$value[1])
+  sens_fut_mow[i, "changed_par"] <- names(par_fm_new)[i]
+  
+}
+
+sens_amb_gra_fin <- data.frame(sensitivity_amb = (sens_amb_gra$new_lambda - sens_amb_gra$ori_lambda)/0.001,
+                               par = sens_amb_gra$changed_par)
+sens_amb_mow_fin <- data.frame(sensitivity_amb = (sens_amb_mow$new_lambda - sens_amb_mow$ori_lambda)/0.001,
+                               par = sens_amb_mow$changed_par)
+sens_fut_gra_fin <- data.frame(sensitivity_fut = (sens_fut_gra$new_lambda - sens_fut_gra$ori_lambda)/0.001,
+                               par = sens_fut_gra$changed_par)
+sens_fut_mow_fin <- data.frame(sensitivity_fut = (sens_fut_mow$new_lambda - sens_fut_mow$ori_lambda)/0.001,
+                               par = sens_fut_mow$changed_par)
+
+## change order to desired order
+sens_amb_gra_fin$par <- factor(sens_amb_gra_fin$par, 
+                               levels = c("surv_b0", "surv_b1", "grow_b0", "grow_b1", 
+                                          "grow_sd", "seednum_b0", "seednum_b1", 
+                                          "flowprob_b0", "flowprob_b1", "novSL_per_fl",
+                                          "aprilSL_per_fl", "SL_surv", "new_size_mean",
+                                          "new_size_sd"))
+sens_amb_gra_fin <- sens_amb_gra_fin[order(sens_amb_gra_fin$par),]
+sens_amb_gra_fin$par_names <- factor(mylabels_VR, 
+                                     levels = c("S Int", "S Slope", "G Int", "G Slope", 
+                                                "G SD", "P Int", "P Slope", "F Int", "F Slope", 
+                                                " \u03B8f", "\u03B8s", "B", "\u03B7", 
+                                                "\u03B7 SD"))
+
+sens_amb_mow_fin$par <- factor(sens_amb_mow_fin$par, 
+                               levels = c("surv_b0", "surv_b1", "grow_b0", "grow_b1", 
+                                          "grow_sd", "seednum_b0", "seednum_b1", 
+                                          "flowprob_b0", "flowprob_b1", "novSL_per_fl",
+                                          "aprilSL_per_fl", "SL_surv", "new_size_mean",
+                                          "new_size_sd"))
+sens_amb_mow_fin <- sens_amb_mow_fin[order(sens_amb_mow_fin$par),]
+sens_amb_mow_fin$par_names <- factor(mylabels_VR, 
+                                     levels = c("S Int", "S Slope", "G Int", "G Slope", 
+                                                "G SD", "P Int", "P Slope", "F Int", "F Slope", 
+                                                " \u03B8f", "\u03B8s", "B", "\u03B7", 
+                                                "\u03B7 SD"))
+
+sens_fut_gra_fin$par <- factor(sens_fut_gra_fin$par, 
+                               levels = c("surv_b0", "surv_b1", "grow_b0", "grow_b1", 
+                                          "grow_sd", "seednum_b0", "seednum_b1", 
+                                          "flowprob_b0", "flowprob_b1", "novSL_per_fl",
+                                          "aprilSL_per_fl", "SL_surv", "new_size_mean",
+                                          "new_size_sd"))
+sens_fut_gra_fin <- sens_fut_gra_fin[order(sens_fut_gra_fin$par),]
+sens_fut_gra_fin$par_names <- factor(mylabels_VR, 
+                                     levels = c("S Int", "S Slope", "G Int", "G Slope", 
+                                                "G SD", "P Int", "P Slope", "F Int", "F Slope", 
+                                                " \u03B8f", "\u03B8s", "B", "\u03B7", 
+                                                "\u03B7 SD"))
+
+sens_fut_mow_fin$par <- factor(sens_fut_mow_fin$par, 
+                               levels = c("surv_b0", "surv_b1", "grow_b0", "grow_b1", 
+                                          "grow_sd", "seednum_b0", "seednum_b1", 
+                                          "flowprob_b0", "flowprob_b1", "novSL_per_fl",
+                                          "aprilSL_per_fl", "SL_surv", "new_size_mean",
+                                          "new_size_sd"))
+sens_fut_mow_fin <- sens_fut_mow_fin[order(sens_fut_mow_fin$par),]
+sens_fut_mow_fin$par_names <- factor(mylabels_VR, 
+                                     levels = c("S Int", "S Slope", "G Int", "G Slope", 
+                                                "G SD", "P Int", "P Slope", "F Int", "F Slope", 
+                                                " \u03B8f", "\u03B8s", "B", "\u03B7", 
+                                                "\u03B7 SD"))
+
+amb_mow_pl <- ggplot(sens_amb_mow_fin, aes(x = par_names, y = sensitivity_amb)) + 
+  geom_bar(stat = "identity") + theme_bw() + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + 
+  labs(title = "(B) Ambient mowing", x = "", y = "") +
+  ylim(0, 60) 
+
+amb_gra_pl <- ggplot(sens_amb_gra_fin, aes(x = par_names, y = sensitivity_amb)) + 
+  geom_bar(stat = "identity") + theme_bw() + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) + 
+  labs(title = "(A) Ambient grazing", y = expression(paste("Sensitivity of ", 
+                                                           lambda)), x = "") + ylim(0, 60)
+
+fut_mow_pl <- ggplot(sens_fut_mow_fin, aes(x = par_names, y = sensitivity_fut)) + 
+  geom_bar(stat = "identity") + theme_bw() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "(D) Future mowing", y = "", x = "") + ylim(0, 60)
+
+fut_gra_pl <- ggplot(sens_fut_gra_fin, aes(x = par_names, y = sensitivity_fut)) + 
+  geom_bar(stat = "identity") + theme_bw() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  labs(title = "(C) Future grazing", y = expression(paste("Sensitivity of ", 
+                                                          lambda)), x = "") + ylim(0, 60)
+
+sensitivity_all <- grid.arrange(amb_gra_pl, amb_mow_pl, fut_gra_pl, fut_mow_pl)
+ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/Fig_sens.tiff", 
+       plot = sensitivity_all, 
+       device = "tiff", 
+       dpi = res, 
+       width = 20,
+       height =15, 
+       units = "cm")
+
+## sensitivity + elasticity
+heat_colors <- sort(heat.colors(10), decreasing = T)
+
+## ambient mowing
+par_am$n <-50
+
+k_yx <- ker_mee(par_am)$k_yx
+lam   <- Re(eigen(k_yx)$values[1])
+ev    <- eigen(k_yx) 
+
+W <- ev$vectors 
+w <- abs(Re(W[, 1])) #w is the right eigenvector, this also describes the reproductive value of each stage class.  Reproductive value depends on reproduction, survival and timing (i.e., an individual has to live to reach a reproductive stage in order to have reproductive value.  Low values could indicate a small proportion of individuals in a stage class survive to reproductive age).  
+V <- try(Conj(solve(W)), silent = TRUE)
+v <- abs(Re(V[1, ])) #v is the left eigenvector, this also describes he proportion of individuals in each stage class at stable stage distribution
+s <- v %o% w #sensitivity of lambda to changes in each matrix element (aij) is proportional to the product of the ith element of the left eigenvector and the jth element of the right eigenvector 
+rotate <- function(x) t(apply(x, 2, rev))
+e <- s * k_yx/lam #elasticity is the proportional sensitivity of lambda to changes in each matrix element 
+e <- rotate(e)
+
+image(e)
+image(rotate(s))
+
+elast_amb_mow <- reshape::melt(e) %>% ggplot(aes(X1, X2, fill = value)) + geom_tile() + 
+  theme_bw() + scale_fill_gradientn(colors = heat_colors) +
+  labs(title = "(D) Elasticity - ambient mowing", y = "", 
+       x = "") + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), 
+        axis.text.y = element_blank(), axis.ticks.y = element_blank(), 
+        legend.title = element_blank(), aspect.ratio = 0.25) 
+  
+sens_amb_mow <- reshape::melt(rotate(s)) %>% ggplot(aes(X1, X2, fill = value)) + geom_tile() + 
+  theme_bw() + scale_fill_gradientn(colors = heat_colors) +
+  labs(title = "(C) Sensitivity - ambient mowing", y = "Size (t + 1)", 
+       x = "") + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), 
+        axis.text.y = element_blank(), axis.ticks.y = element_blank(), 
+        legend.title = element_blank(), aspect.ratio = 0.25) 
+
+## ambient grazing
+par_ag$n <- 50
+k_yx <- ker_mee(par_ag)$k_yx
+lam   <- Re(eigen(k_yx)$values[1])
+ev    <- eigen(k_yx) 
+
+W <- ev$vectors 
+w <- abs(Re(W[, 1])) #w is the right eigenvector, this also describes the reproductive value of each stage class.  Reproductive value depends on reproduction, survival and timing (i.e., an individual has to live to reach a reproductive stage in order to have reproductive value.  Low values could indicate a small proportion of individuals in a stage class survive to reproductive age).  
+V <- try(Conj(solve(W)), silent = TRUE)
+v <- abs(Re(V[1, ])) #v is the left eigenvector, this also describes he proportion of individuals in each stage class at stable stage distribution
+s <- v %o% w #sensitivity of lambda to changes in each matrix element (aij) is proportional to the product of the ith element of the left eigenvector and the jth element of the right eigenvector 
+rotate <- function(x) t(apply(x, 2, rev))
+e <- s * k_yx/lam #elasticity is the proportional sensitivity of lambda to changes in each matrix element 
+e <- rotate(e)
+
+image(e)
+image(rotate(s))
+
+elast_amb_gra <- reshape::melt(e) %>% ggplot(aes(X1, X2, fill = value)) + geom_tile() + 
+  theme_bw() + scale_fill_gradientn(colors = heat_colors) +
+  labs(title = "(B) Elasticity - ambient grazing", y = "", 
+       x = "") + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), 
+        axis.text.y = element_blank(), axis.ticks.y = element_blank(), 
+        legend.title = element_blank(), aspect.ratio = 0.25) 
+
+sens_amb_gra <- reshape::melt(rotate(s)) %>% ggplot(aes(X1, X2, fill = value)) + geom_tile() + 
+  theme_bw() + scale_fill_gradientn(colors = heat_colors) +
+  labs(title = "(A) Sensitivty - ambient grazing", y = "Size (t + 1)", 
+       x = "") + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), 
+        axis.text.y = element_blank(), axis.ticks.y = element_blank(), 
+        legend.title = element_blank(), aspect.ratio = 0.25) 
+
+##future mowing
+par_fm$n <- 50
+k_yx <- ker_mee(par_fm)$k_yx
+lam   <- Re(eigen(k_yx)$values[1])
+ev    <- eigen(k_yx) 
+
+W <- ev$vectors 
+w <- abs(Re(W[, 1])) #w is the right eigenvector, this also describes the reproductive value of each stage class.  Reproductive value depends on reproduction, survival and timing (i.e., an individual has to live to reach a reproductive stage in order to have reproductive value.  Low values could indicate a small proportion of individuals in a stage class survive to reproductive age).  
+V <- try(Conj(solve(W)), silent = TRUE)
+v <- abs(Re(V[1, ])) #v is the left eigenvector, this also describes he proportion of individuals in each stage class at stable stage distribution
+s <- v %o% w #sensitivity of lambda to changes in each matrix element (aij) is proportional to the product of the ith element of the left eigenvector and the jth element of the right eigenvector 
+rotate <- function(x) t(apply(x, 2, rev))
+e <- s * k_yx/lam #elasticity is the proportional sensitivity of lambda to changes in each matrix element 
+e <- rotate(e)
+
+image(e)
+image(rotate(s))
+
+elast_fut_mow <- reshape::melt(e) %>% ggplot(aes(X1, X2, fill = value)) + geom_tile() + 
+  theme_bw() + scale_fill_gradientn(colors = heat_colors) +
+  labs(title = "(H) Elasticity - future mowing", y = "", 
+       x = "Size (t)") + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), 
+        axis.text.y = element_blank(), axis.ticks.y = element_blank(), 
+        legend.title = element_blank(), aspect.ratio = 0.25)  
+
+sens_fut_mow <- reshape::melt(rotate(s)) %>% ggplot(aes(X1, X2, fill = value)) + geom_tile() + 
+  theme_bw() + scale_fill_gradientn(colors = heat_colors) +
+  labs(title = "(G) Sensitivity - future mowing", y = "Size (t + 1)", 
+       x = "Size (t)") + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), 
+        axis.text.y = element_blank(), axis.ticks.y = element_blank(), 
+        legend.title = element_blank(), aspect.ratio = 0.25) 
+
+## future grazing
+par_fg$n <- 50
+k_yx <- ker_mee(par_fg)$k_yx
+lam   <- Re(eigen(k_yx)$values[1])
+ev    <- eigen(k_yx) 
+
+W <- ev$vectors 
+w <- abs(Re(W[, 1])) #w is the right eigenvector, this also describes the reproductive value of each stage class.  Reproductive value depends on reproduction, survival and timing (i.e., an individual has to live to reach a reproductive stage in order to have reproductive value.  Low values could indicate a small proportion of individuals in a stage class survive to reproductive age).  
+V <- try(Conj(solve(W)), silent = TRUE)
+v <- abs(Re(V[1, ])) #v is the left eigenvector, this also describes he proportion of individuals in each stage class at stable stage distribution
+s <- v %o% w #sensitivity of lambda to changes in each matrix element (aij) is proportional to the product of the ith element of the left eigenvector and the jth element of the right eigenvector 
+rotate <- function(x) t(apply(x, 2, rev))
+
+e <- s * k_yx/lam #elasticity is the proportional sensitivity of lambda to changes in each matrix element 
+e <- rotate(e)
+
+image(e)
+image(rotate(s))
+
+elast_fut_gra <- reshape::melt(e) %>% ggplot(aes(X1, X2, fill = value)) + geom_tile() + 
+  theme_bw() + scale_fill_gradientn(colors = heat_colors) +
+  labs(title = "(F) Elasticity - future grazing", y = "", 
+       x = "") + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), 
+        axis.text.y = element_blank(), axis.ticks.y = element_blank(), 
+        legend.title = element_blank(), aspect.ratio = 0.25)
+
+sens_fut_gra <- reshape::melt(rotate(s)) %>% ggplot(aes(X1, X2, fill = value)) + geom_tile() + 
+  theme_bw() + scale_fill_gradientn(colors = heat_colors) +
+  labs(title = "(E) Sensitivty - future grazing", y = "Size (t + 1)", 
+       x = "") + 
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank(), 
+        axis.text.y = element_blank(), axis.ticks.y = element_blank(), 
+        legend.title = element_blank(), aspect.ratio = 0.25)
+
+heat_maps <- ggpubr::ggarrange(sens_amb_gra, elast_amb_gra, sens_amb_mow, elast_amb_mow, sens_fut_gra,
+             elast_fut_gra, sens_fut_mow, elast_fut_mow, ncol = 2,nrow = 4, align = "hv")
+
+heat_maps
+ggsave(filename = "C:\\Users/ma22buky/Documents/Julia_Paper/heat.tiff", 
+       plot = heat_maps, 
+       device = "tiff", 
+       dpi = res, 
+       width = 23.11,
+       height = 15, 
+       units = "cm")
