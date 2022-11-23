@@ -63,8 +63,8 @@ mylegend <- g_legend <- function(a.gplot)
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ###           read data
 ###~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-demo_data <- read.csv("https://raw.githubusercontent.com/Martin19910130/Bromus_IPM_publication/master/Bro_Demography.csv")
-seed_data <- read.csv("https://raw.githubusercontent.com/Martin19910130/Bromus_IPM_publication/master/Bro_Seed_data.csv")
+demo_data <- read.csv("https://raw.githubusercontent.com/Martin19910130/Bromus_IPM_publication/master/Data/Bro_Demography.csv")
+seed_data <- read.csv("https://raw.githubusercontent.com/Martin19910130/Bromus_IPM_publication/master/Data/Bro_Seed_data.csv")
 
 ## Delete the new plants which grew bigger then 30
 demo_data <- demo_data[-(which(demo_data$sizet1 >= 30 & demo_data$new_plant == 1)),]
