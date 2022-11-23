@@ -286,8 +286,8 @@ boot_lam <- function(ii)
 ####~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ####           Read data
 ####~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-dat_d <- read.csv("https://raw.githubusercontent.com/Martin19910130/Bromus_IPM_publication/master/Bro_Demography.csv")
-dat_s <- read.csv("https://raw.githubusercontent.com/Martin19910130/Bromus_IPM_publication/master/Bro_Seed_data.csv")
+dat_d <- read.csv("https://raw.githubusercontent.com/Martin19910130/Bromus_IPM_publication/master/Data/Bro_Demography.csv")
+dat_s <- read.csv("https://raw.githubusercontent.com/Martin19910130/Bromus_IPM_publication/master/Data/Bro_Seed_data.csv")
 
 ## Delete the new plants which grow bigger then 30
 dat_d <- dat_d[-(which(dat_d$sizet1 >= 30 & dat_d$new_plant == 1)),]
